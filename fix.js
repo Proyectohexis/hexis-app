@@ -1,4 +1,6 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+const fs = require('fs');
+
+const content = `import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
 import { colors, typography, spacing } from '../../theme';
 
 export default function DashboardScreen({ route, navigation }) {
@@ -56,3 +58,7 @@ const styles = StyleSheet.create({
   habitsButton: { backgroundColor: colors.accent.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center', marginTop: spacing.md },
   habitsButtonText: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.text.primary, letterSpacing: 1 },
 });
+`;
+
+fs.writeFileSync('src/screens/dashboard/DashboardScreen.js', content);
+console.log('Archivo creado correctamente');
