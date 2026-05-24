@@ -2,12 +2,14 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator
 import { useState, useEffect } from 'react';
 import { colors, typography, spacing } from '../../theme';
 import { getHabits, toggleHabit, createHabit } from '../../lib/habits';
+import { updateStreak } from '../../lib/streaks';
 
 const USER_ID = 'user_001';
 
 export default function HabitsScreen() {
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     loadHabits();
@@ -29,8 +31,17 @@ export default function HabitsScreen() {
   }
 
   async function handleToggle(habit) {
+    const updatedHabits = habits.map(h =>
+      h.id === habit.id ? { ...h, completed: !h.completed } : h
+    );
     await toggleHabit(habit.id, !habit.completed);
-    setHabits(habits.map(h => h.id === habit.id ? { ...h, completed: !h.completed } : h));
+    setHabits(updatedHabits);
+
+    const allDone = updatedHabits.every(h => h.completed);
+    if (allDone) {
+      const newStreak = await updateStreak();
+      setStreak(newStreak);
+    }
   }
 
   const completed = habits.filter(h => h.completed).length;
@@ -49,6 +60,12 @@ export default function HabitsScreen() {
         <Text style={styles.title}>Habitos</Text>
         <Text style={styles.subtitle}>{completed} de {habits.length} completados</Text>
       </View>
+
+      {streak > 0 && (
+        <View style={styles.streakBanner}>
+          <Text style={styles.streakBannerText}>Racha activa: {streak} dia{streak > 1 ? 's' : ''}</Text>
+        </View>
+      )}
 
       <View style={styles.progressBar}>
         <View style={[styles.progressFill, { width: habits.length > 0 ? `${(completed / habits.length) * 100}%` : '0%' }]} />
@@ -81,6 +98,8 @@ const styles = StyleSheet.create({
   header: { marginBottom: spacing.md },
   title: { fontSize: typography.sizes.xxl, fontWeight: typography.weights.bold, color: colors.text.primary, marginBottom: spacing.xs },
   subtitle: { fontSize: typography.sizes.sm, color: colors.text.secondary },
+  streakBanner: { backgroundColor: colors.accent.muted, borderRadius: 12, padding: spacing.md, alignItems: 'center', marginBottom: spacing.md, borderWidth: 1, borderColor: colors.accent.primary },
+  streakBannerText: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.accent.light },
   progressBar: { height: 4, backgroundColor: colors.border.default, borderRadius: 2, marginBottom: spacing.xl },
   progressFill: { height: 4, backgroundColor: colors.accent.primary, borderRadius: 2 },
   list: { gap: spacing.sm },
