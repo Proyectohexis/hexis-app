@@ -21,7 +21,7 @@ export default function NameScreen({ navigation }) {
       />
       <TouchableOpacity
         style={[styles.button, !name && styles.buttonDisabled]}
-        onPress={() => name && navigation.navigate('Dashboard', { name })}
+        onPress={() => name && navigation.navigate('Main', { name })}
       >
         <Text style={styles.buttonText}>Entrar a HEXIS</Text>
       </TouchableOpacity>

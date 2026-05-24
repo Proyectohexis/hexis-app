@@ -1,4 +1,6 @@
-import { NavigationContainer } from '@react-navigation/native';
+const fs = require('fs');
+
+const content = `import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
@@ -76,3 +78,7 @@ export default function AppNavigator() {
     </NavigationContainer>
   );
 }
+`;
+
+fs.writeFileSync('src/navigation/AppNavigator.js', content);
+console.log('AppNavigator creado correctamente');
