@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator, TextInput, Modal } from 'react-native';
 import { useState, useEffect } from 'react';
 import { colors, typography, spacing } from '../../theme';
 import { getHabits, toggleHabit, createHabit } from '../../lib/habits';
@@ -10,6 +10,9 @@ export default function HabitsScreen() {
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newHabit, setNewHabit] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadHabits();
@@ -36,12 +39,21 @@ export default function HabitsScreen() {
     );
     await toggleHabit(habit.id, !habit.completed);
     setHabits(updatedHabits);
-
     const allDone = updatedHabits.every(h => h.completed);
     if (allDone) {
       const newStreak = await updateStreak();
       setStreak(newStreak);
     }
+  }
+
+  async function handleAddHabit() {
+    if (!newHabit.trim()) return;
+    setSaving(true);
+    await createHabit(USER_ID, newHabit.trim());
+    setNewHabit('');
+    setModalVisible(false);
+    await loadHabits();
+    setSaving(false);
   }
 
   const completed = habits.filter(h => h.completed).length;
@@ -55,44 +67,77 @@ export default function HabitsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Habitos</Text>
-        <Text style={styles.subtitle}>{completed} de {habits.length} completados</Text>
-      </View>
-
-      {streak > 0 && (
-        <View style={styles.streakBanner}>
-          <Text style={styles.streakBannerText}>Racha activa: {streak} dia{streak > 1 ? 's' : ''}</Text>
+    <View style={styles.wrapper}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Habitos</Text>
+          <Text style={styles.subtitle}>{completed} de {habits.length} completados</Text>
         </View>
-      )}
 
-      <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: habits.length > 0 ? `${(completed / habits.length) * 100}%` : '0%' }]} />
-      </View>
+        {streak > 0 && (
+          <View style={styles.streakBanner}>
+            <Text style={styles.streakBannerText}>Racha activa: {streak} dia{streak > 1 ? 's' : ''}</Text>
+          </View>
+        )}
 
-      <View style={styles.list}>
-        {habits.map((habit) => (
-          <TouchableOpacity
-            key={habit.id}
-            style={[styles.habitCard, habit.completed && styles.habitCardDone]}
-            onPress={() => handleToggle(habit)}
-          >
-            <View style={[styles.check, habit.completed && styles.checkDone]}>
-              {habit.completed && <Text style={styles.checkMark}>✓</Text>}
-            </View>
-            <Text style={[styles.habitName, habit.completed && styles.habitNameDone]}>
-              {habit.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: habits.length > 0 ? `${(completed / habits.length) * 100}%` : '0%' }]} />
+        </View>
+
+        <View style={styles.list}>
+          {habits.map((habit) => (
+            <TouchableOpacity
+              key={habit.id}
+              style={[styles.habitCard, habit.completed && styles.habitCardDone]}
+              onPress={() => handleToggle(habit)}
+            >
+              <View style={[styles.check, habit.completed && styles.checkDone]}>
+                {habit.completed && <Text style={styles.checkMark}>✓</Text>}
+              </View>
+              <Text style={[styles.habitName, habit.completed && styles.habitNameDone]}>
+                {habit.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
+      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
+        <Text style={styles.addButtonText}>+ Nuevo habito</Text>
+      </TouchableOpacity>
+
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Nuevo habito</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Nombre del habito"
+              placeholderTextColor={colors.text.tertiary}
+              value={newHabit}
+              onChangeText={setNewHabit}
+              autoFocus
+            />
+            <TouchableOpacity
+              style={[styles.modalButton, (!newHabit.trim() || saving) && styles.buttonDisabled]}
+              onPress={handleAddHabit}
+              disabled={!newHabit.trim() || saving}
+            >
+              <Text style={styles.modalButtonText}>{saving ? 'Guardando...' : 'Agregar'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background.primary },
+  wrapper: { flex: 1, backgroundColor: colors.background.primary },
+  container: { flex: 1 },
   content: { paddingHorizontal: spacing.lg, paddingTop: spacing.xxl, paddingBottom: spacing.xxl },
   loadingContainer: { flex: 1, backgroundColor: colors.background.primary, alignItems: 'center', justifyContent: 'center' },
   header: { marginBottom: spacing.md },
@@ -110,4 +155,15 @@ const styles = StyleSheet.create({
   checkMark: { color: colors.text.primary, fontSize: 14, fontWeight: typography.weights.bold },
   habitName: { fontSize: typography.sizes.md, color: colors.text.primary },
   habitNameDone: { color: colors.text.tertiary },
+  addButton: { margin: spacing.lg, backgroundColor: colors.accent.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center' },
+  addButtonText: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.text.primary, letterSpacing: 1 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: colors.background.secondary, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xl },
+  modalTitle: { fontSize: typography.sizes.xl, fontWeight: typography.weights.bold, color: colors.text.primary, marginBottom: spacing.lg },
+  modalInput: { borderWidth: 1, borderColor: colors.border.default, borderRadius: 12, paddingVertical: spacing.md, paddingHorizontal: spacing.lg, fontSize: typography.sizes.md, color: colors.text.primary, backgroundColor: colors.background.card, marginBottom: spacing.md },
+  modalButton: { backgroundColor: colors.accent.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center', marginBottom: spacing.sm },
+  modalButtonText: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.text.primary },
+  buttonDisabled: { opacity: 0.4 },
+  cancelButton: { paddingVertical: spacing.md, alignItems: 'center' },
+  cancelButtonText: { fontSize: typography.sizes.md, color: colors.text.secondary },
 });
