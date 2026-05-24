@@ -1,31 +1,57 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
-import { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useState, useEffect } from 'react';
 import { colors, typography, spacing } from '../../theme';
+import { getHabits, toggleHabit, createHabit } from '../../lib/habits';
 
-const defaultHabits = [
-  { id: '1', name: 'Entrenamiento', completed: false },
-  { id: '2', name: 'Lectura', completed: false },
-  { id: '3', name: 'Meditación', completed: false },
-];
+const USER_ID = 'user_001';
 
 export default function HabitsScreen() {
-  const [habits, setHabits] = useState(defaultHabits);
+  const [habits, setHabits] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const toggleHabit = (id) => {
-    setHabits(habits.map(h => h.id === id ? { ...h, completed: !h.completed } : h));
-  };
+  useEffect(() => {
+    loadHabits();
+  }, []);
+
+  async function loadHabits() {
+    setLoading(true);
+    const { data } = await getHabits(USER_ID);
+    if (data && data.length === 0) {
+      await createHabit(USER_ID, 'Entrenamiento');
+      await createHabit(USER_ID, 'Lectura');
+      await createHabit(USER_ID, 'Meditacion');
+      const { data: newData } = await getHabits(USER_ID);
+      setHabits(newData || []);
+    } else {
+      setHabits(data || []);
+    }
+    setLoading(false);
+  }
+
+  async function handleToggle(habit) {
+    await toggleHabit(habit.id, !habit.completed);
+    setHabits(habits.map(h => h.id === habit.id ? { ...h, completed: !h.completed } : h));
+  }
 
   const completed = habits.filter(h => h.completed).length;
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator color={colors.accent.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.title}>Hábitos</Text>
+        <Text style={styles.title}>Habitos</Text>
         <Text style={styles.subtitle}>{completed} de {habits.length} completados</Text>
       </View>
 
       <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: `${(completed / habits.length) * 100}%` }]} />
+        <View style={[styles.progressFill, { width: habits.length > 0 ? `${(completed / habits.length) * 100}%` : '0%' }]} />
       </View>
 
       <View style={styles.list}>
@@ -33,7 +59,7 @@ export default function HabitsScreen() {
           <TouchableOpacity
             key={habit.id}
             style={[styles.habitCard, habit.completed && styles.habitCardDone]}
-            onPress={() => toggleHabit(habit.id)}
+            onPress={() => handleToggle(habit)}
           >
             <View style={[styles.check, habit.completed && styles.checkDone]}>
               {habit.completed && <Text style={styles.checkMark}>✓</Text>}
@@ -51,6 +77,7 @@ export default function HabitsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.primary },
   content: { paddingHorizontal: spacing.lg, paddingTop: spacing.xxl, paddingBottom: spacing.xxl },
+  loadingContainer: { flex: 1, backgroundColor: colors.background.primary, alignItems: 'center', justifyContent: 'center' },
   header: { marginBottom: spacing.md },
   title: { fontSize: typography.sizes.xxl, fontWeight: typography.weights.bold, color: colors.text.primary, marginBottom: spacing.xs },
   subtitle: { fontSize: typography.sizes.sm, color: colors.text.secondary },
