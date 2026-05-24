@@ -1,13 +1,25 @@
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { useState, useEffect } from 'react';
 import { colors, typography, spacing } from '../../theme';
+import { getStreak } from '../../lib/streaks';
 
 export default function DashboardScreen({ route, navigation }) {
   const name = route?.params?.name || 'Atleta';
+  const [streak, setStreak] = useState(0);
   const today = new Date().toLocaleDateString('es-ES', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   });
+
+  useEffect(() => {
+    loadStreak();
+  }, []);
+
+  async function loadStreak() {
+    const { data } = await getStreak();
+    if (data) setStreak(data.current_streak);
+  }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -18,8 +30,8 @@ export default function DashboardScreen({ route, navigation }) {
       </View>
       <View style={styles.streakCard}>
         <Text style={styles.streakLabel}>Racha activa</Text>
-        <Text style={styles.streakNumber}>1</Text>
-        <Text style={styles.streakUnit}>dia</Text>
+        <Text style={styles.streakNumber}>{streak}</Text>
+        <Text style={styles.streakUnit}>{streak === 1 ? 'dia' : 'dias'}</Text>
       </View>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Habitos de hoy</Text>
@@ -30,18 +42,6 @@ export default function DashboardScreen({ route, navigation }) {
           </View>
         ))}
       </View>
-      <TouchableOpacity
-        style={styles.habitsButton}
-        onPress={() => navigation.navigate('Habits')}
-      >
-        <Text style={styles.habitsButtonText}>Ver todos los habitos</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.progressButton}
-        onPress={() => navigation.navigate('Progress')}
-      >
-        <Text style={styles.progressButtonText}>Ver progreso fisico</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -62,8 +62,4 @@ const styles = StyleSheet.create({
   habitRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border.subtle },
   habitDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent.primary, marginRight: spacing.md },
   habitText: { fontSize: typography.sizes.md, color: colors.text.secondary },
-  habitsButton: { backgroundColor: colors.accent.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center', marginTop: spacing.md },
-  habitsButtonText: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.text.primary, letterSpacing: 1 },
-  progressButton: { borderWidth: 1, borderColor: colors.accent.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center', marginTop: spacing.sm },
-  progressButtonText: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.accent.primary, letterSpacing: 1 },
 });
