@@ -5,6 +5,7 @@ import GoalScreen from '../screens/onboarding/GoalScreen';
 import NameScreen from '../screens/onboarding/NameScreen';
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
 import HabitsScreen from '../screens/habits/HabitsScreen';
+import ProgressScreen from '../screens/progress/ProgressScreen';
 
 const Stack = createStackNavigator();
 
@@ -17,6 +18,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Name" component={NameScreen} />
         <Stack.Screen name="Dashboard" component={DashboardScreen} />
         <Stack.Screen name="Habits" component={HabitsScreen} />
+        <Stack.Screen name="Progress" component={ProgressScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -30,8 +30,17 @@ export default function DashboardScreen({ route, navigation }) {
           </View>
         ))}
       </View>
-      <TouchableOpacity style={styles.habitsButton} onPress={() => navigation.navigate('Habits')}>
+      <TouchableOpacity
+        style={styles.habitsButton}
+        onPress={() => navigation.navigate('Habits')}
+      >
         <Text style={styles.habitsButtonText}>Ver todos los habitos</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.progressButton}
+        onPress={() => navigation.navigate('Progress')}
+      >
+        <Text style={styles.progressButtonText}>Ver progreso fisico</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -55,4 +64,6 @@ const styles = StyleSheet.create({
   habitText: { fontSize: typography.sizes.md, color: colors.text.secondary },
   habitsButton: { backgroundColor: colors.accent.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center', marginTop: spacing.md },
   habitsButtonText: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.text.primary, letterSpacing: 1 },
+  progressButton: { borderWidth: 1, borderColor: colors.accent.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center', marginTop: spacing.sm },
+  progressButtonText: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.accent.primary, letterSpacing: 1 },
 });
