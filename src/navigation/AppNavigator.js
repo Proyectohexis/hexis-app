@@ -3,6 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import WelcomeScreen from '../screens/onboarding/WelcomeScreen';
 import GoalScreen from '../screens/onboarding/GoalScreen';
 import NameScreen from '../screens/onboarding/NameScreen';
+import DashboardScreen from '../screens/dashboard/DashboardScreen';
 
 const Stack = createStackNavigator();
 
@@ -13,6 +14,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Goal" component={GoalScreen} />
         <Stack.Screen name="Name" component={NameScreen} />
+        <Stack.Screen name="Dashboard" component={DashboardScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
