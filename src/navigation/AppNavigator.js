@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text } from 'react-native';
+import { Text, ActivityIndicator, View } from 'react-native';
 import { useState, useEffect } from 'react';
 import WelcomeScreen from '../screens/onboarding/WelcomeScreen';
 import GoalScreen from '../screens/onboarding/GoalScreen';
@@ -12,7 +12,7 @@ import ProgressScreen from '../screens/progress/ProgressScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import { colors, typography } from '../theme';
-import { onAuthStateChange } from '../lib/auth';
+import { supabase } from '../lib/supabase';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -52,7 +52,7 @@ function TabNavigator({ route }) {
         name="Habits"
         component={HabitsScreen}
         options={{
-          tabBarLabel: 'Habitos',
+          tabBarLabel: 'Hábitos',
           tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>{String.fromCharCode(10003)}</Text>,
         }}
       />
@@ -73,15 +73,25 @@ export default function AppNavigator() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = onAuthStateChange((user) => {
-      setUser(user);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       setLoading(false);
     });
-    setLoading(false);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
     return () => subscription?.unsubscribe();
   }, []);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background.primary, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors.accent.primary} />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
