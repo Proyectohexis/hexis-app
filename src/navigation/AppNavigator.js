@@ -2,13 +2,17 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text } from 'react-native';
+import { useState, useEffect } from 'react';
 import WelcomeScreen from '../screens/onboarding/WelcomeScreen';
 import GoalScreen from '../screens/onboarding/GoalScreen';
 import NameScreen from '../screens/onboarding/NameScreen';
 import DashboardScreen from '../screens/dashboard/DashboardScreen';
 import HabitsScreen from '../screens/habits/HabitsScreen';
 import ProgressScreen from '../screens/progress/ProgressScreen';
+import LoginScreen from '../screens/auth/LoginScreen';
+import RegisterScreen from '../screens/auth/RegisterScreen';
 import { colors, typography } from '../theme';
+import { onAuthStateChange } from '../lib/auth';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -65,13 +69,39 @@ function TabNavigator({ route }) {
 }
 
 export default function AppNavigator() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const { data: { subscription } } = onAuthStateChange((user) => {
+      setUser(user);
+      setLoading(false);
+    });
+    setLoading(false);
+    return () => subscription?.unsubscribe();
+  }, []);
+
+  if (loading) return null;
+
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Welcome" component={WelcomeScreen} />
-        <Stack.Screen name="Goal" component={GoalScreen} />
-        <Stack.Screen name="Name" component={NameScreen} />
-        <Stack.Screen name="Main" component={TabNavigator} />
+        {user ? (
+          <Stack.Screen
+            name="Main"
+            component={TabNavigator}
+            initialParams={{ name: user.user_metadata?.name || 'Atleta' }}
+          />
+        ) : (
+          <>
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Goal" component={GoalScreen} />
+            <Stack.Screen name="Name" component={NameScreen} />
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Screen name="Main" component={TabNavigator} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -2,32 +2,48 @@ import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Activi
 import { useState, useEffect } from 'react';
 import { colors, typography, spacing } from '../../theme';
 import { getProgress, addProgress } from '../../lib/progress';
+import { getCurrentUser } from '../../lib/auth';
 
 export default function ProgressScreen() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [weight, setWeight] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   useEffect(() => {
-    loadProgress();
+    initScreen();
   }, []);
 
-  async function loadProgress() {
+  async function initScreen() {
+    const user = await getCurrentUser();
+    if (user) {
+      setUserId(user.id);
+      await loadProgress(user.id);
+    }
+  }
+
+  async function loadProgress(uid) {
     setLoading(true);
-    const { data } = await getProgress();
-    setRecords(data || []);
+    setError(null);
+    const { data, error } = await getProgress(uid);
+    if (error) {
+      setError('No se pudo cargar el progreso.');
+    } else {
+      setRecords(data || []);
+    }
     setLoading(false);
   }
 
   async function handleSave() {
-    if (!weight) return;
+    if (!weight || !userId) return;
     setSaving(true);
-    await addProgress(parseFloat(weight), notes);
+    await addProgress(userId, parseFloat(weight), notes);
     setWeight('');
     setNotes('');
-    await loadProgress();
+    await loadProgress(userId);
     setSaving(false);
   }
 
@@ -39,27 +55,37 @@ export default function ProgressScreen() {
     );
   }
 
+  if (error) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity onPress={() => userId && loadProgress(userId)} style={styles.retryButton}>
+          <Text style={styles.retryText}>Reintentar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text style={styles.title}>Progreso fisico</Text>
         <Text style={styles.subtitle}>Registra tu evolucion dia a dia.</Text>
       </View>
-
       <View style={styles.form}>
         <Text style={styles.label}>Peso (kg)</Text>
         <TextInput
           style={styles.input}
-          placeholder='Ej. 75.5'
+          placeholder="Ej. 75.5"
           placeholderTextColor={colors.text.tertiary}
           value={weight}
           onChangeText={setWeight}
-          keyboardType='numeric'
+          keyboardType="numeric"
         />
         <Text style={styles.label}>Notas</Text>
         <TextInput
           style={[styles.input, styles.inputMultiline]}
-          placeholder='Como te sientes hoy...'
+          placeholder="Como te sientes hoy..."
           placeholderTextColor={colors.text.tertiary}
           value={notes}
           onChangeText={setNotes}
@@ -73,7 +99,6 @@ export default function ProgressScreen() {
           <Text style={styles.buttonText}>{saving ? 'Guardando...' : 'Guardar registro'}</Text>
         </TouchableOpacity>
       </View>
-
       {records.length > 0 && (
         <View style={styles.history}>
           <Text style={styles.historyTitle}>Historial</Text>
@@ -83,9 +108,7 @@ export default function ProgressScreen() {
                 <Text style={styles.recordWeight}>{record.weight} kg</Text>
                 <Text style={styles.recordDate}>{record.date}</Text>
               </View>
-              {record.notes && (
-                <Text style={styles.recordNotes}>{record.notes}</Text>
-              )}
+              {record.notes && <Text style={styles.recordNotes}>{record.notes}</Text>}
             </View>
           ))}
         </View>
@@ -98,6 +121,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.primary },
   content: { paddingHorizontal: spacing.lg, paddingTop: spacing.xxl, paddingBottom: spacing.xxl },
   loadingContainer: { flex: 1, backgroundColor: colors.background.primary, alignItems: 'center', justifyContent: 'center' },
+  errorText: { fontSize: typography.sizes.md, color: colors.error, marginBottom: spacing.md, textAlign: 'center' },
+  retryButton: { backgroundColor: colors.accent.primary, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, borderRadius: 8 },
+  retryText: { color: colors.text.primary, fontSize: typography.sizes.sm, fontWeight: typography.weights.medium },
   header: { marginBottom: spacing.xl },
   title: { fontSize: typography.sizes.xxl, fontWeight: typography.weights.bold, color: colors.text.primary, marginBottom: spacing.xs },
   subtitle: { fontSize: typography.sizes.sm, color: colors.text.secondary },

@@ -1,20 +1,18 @@
 import { supabase } from './supabase';
 
-const USER_ID = 'user_001';
-
-export async function getProgress() {
+export async function getProgress(userId) {
   const { data, error } = await supabase
     .from('progress')
     .select('*')
-    .eq('user_id', USER_ID)
+    .eq('user_id', userId)
     .order('date', { ascending: false });
   return { data, error };
 }
 
-export async function addProgress(weight, notes) {
+export async function addProgress(userId, weight, notes) {
   const { data, error } = await supabase
     .from('progress')
-    .insert([{ user_id: USER_ID, weight, notes }])
+    .insert([{ user_id: userId, weight, notes }])
     .select();
   return { data, error };
 }

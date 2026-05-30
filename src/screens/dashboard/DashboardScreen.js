@@ -1,11 +1,13 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, ActivityIndicator } from 'react-native';
 import { useState, useEffect } from 'react';
 import { colors, typography, spacing } from '../../theme';
 import { getStreak } from '../../lib/streaks';
+import { getCurrentUser } from '../../lib/auth';
 
-export default function DashboardScreen({ route, navigation }) {
-  const name = route?.params?.name || 'Atleta';
+export default function DashboardScreen({ route }) {
   const [streak, setStreak] = useState(0);
+  const [name, setName] = useState(route?.params?.name || 'Atleta');
+  const [loading, setLoading] = useState(true);
   const today = new Date().toLocaleDateString('es-ES', {
     weekday: 'long',
     day: 'numeric',
@@ -13,12 +15,25 @@ export default function DashboardScreen({ route, navigation }) {
   });
 
   useEffect(() => {
-    loadStreak();
+    initDashboard();
   }, []);
 
-  async function loadStreak() {
-    const { data } = await getStreak();
-    if (data) setStreak(data.current_streak);
+  async function initDashboard() {
+    const user = await getCurrentUser();
+    if (user) {
+      if (user.user_metadata?.name) setName(user.user_metadata.name);
+      const { data } = await getStreak(user.id);
+      if (data) setStreak(data.current_streak);
+    }
+    setLoading(false);
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator color={colors.accent.primary} />
+      </View>
+    );
   }
 
   return (
@@ -33,15 +48,6 @@ export default function DashboardScreen({ route, navigation }) {
         <Text style={styles.streakNumber}>{streak}</Text>
         <Text style={styles.streakUnit}>{streak === 1 ? 'dia' : 'dias'}</Text>
       </View>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Habitos de hoy</Text>
-        {['Entrenamiento', 'Lectura', 'Meditacion'].map((habit) => (
-          <View key={habit} style={styles.habitRow}>
-            <View style={styles.habitDot} />
-            <Text style={styles.habitText}>{habit}</Text>
-          </View>
-        ))}
-      </View>
     </ScrollView>
   );
 }
@@ -49,6 +55,7 @@ export default function DashboardScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background.primary },
   content: { paddingHorizontal: spacing.lg, paddingTop: spacing.xxl, paddingBottom: spacing.xxl },
+  loadingContainer: { flex: 1, backgroundColor: colors.background.primary, alignItems: 'center', justifyContent: 'center' },
   header: { marginBottom: spacing.xl },
   date: { fontSize: typography.sizes.sm, color: colors.text.tertiary, marginBottom: spacing.xs, textTransform: 'capitalize' },
   greeting: { fontSize: typography.sizes.xxl, fontWeight: typography.weights.bold, color: colors.text.primary, marginBottom: spacing.xs },
@@ -57,9 +64,4 @@ const styles = StyleSheet.create({
   streakLabel: { fontSize: typography.sizes.sm, color: colors.accent.primary, letterSpacing: 2, marginBottom: spacing.sm },
   streakNumber: { fontSize: 72, fontWeight: typography.weights.bold, color: colors.text.primary, lineHeight: 80 },
   streakUnit: { fontSize: typography.sizes.md, color: colors.text.secondary },
-  section: { marginBottom: spacing.xl },
-  sectionTitle: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.text.primary, marginBottom: spacing.md },
-  habitRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border.subtle },
-  habitDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.accent.primary, marginRight: spacing.md },
-  habitText: { fontSize: typography.sizes.md, color: colors.text.secondary },
 });

@@ -1,24 +1,21 @@
 import { supabase } from './supabase';
 
-const USER_ID = 'user_001';
-
-export async function getStreak() {
+export async function getStreak(userId) {
   const { data, error } = await supabase
     .from('streaks')
     .select('*')
-    .eq('user_id', USER_ID)
+    .eq('user_id', userId)
     .single();
   return { data, error };
 }
 
-export async function updateStreak() {
+export async function updateStreak(userId) {
   const today = new Date().toISOString().split('T')[0];
-
-  const { data: existing } = await getStreak();
+  const { data: existing } = await getStreak(userId);
 
   if (!existing) {
     await supabase.from('streaks').insert([{
-      user_id: USER_ID,
+      user_id: userId,
       current_streak: 1,
       last_completed: today,
     }]);
@@ -42,7 +39,7 @@ export async function updateStreak() {
   await supabase.from('streaks').update({
     current_streak: newStreak,
     last_completed: today,
-  }).eq('user_id', USER_ID);
+  }).eq('user_id', userId);
 
   return newStreak;
 }

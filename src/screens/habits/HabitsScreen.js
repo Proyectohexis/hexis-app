@@ -3,68 +3,67 @@ import { useState, useEffect } from 'react';
 import { colors, typography, spacing } from '../../theme';
 import { getHabits, toggleHabit, createHabit } from '../../lib/habits';
 import { updateStreak } from '../../lib/streaks';
-
-const USER_ID = 'user_001';
+import { getCurrentUser } from '../../lib/auth';
 
 export default function HabitsScreen() {
   const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [streak, setStreak] = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [newHabit, setNewHabit] = useState('');
   const [saving, setSaving] = useState(false);
+  const [userId, setUserId] = useState(null);
 
-  useEffect(() => {
-    loadHabits();
-  }, []);
+  useEffect(() => { initScreen(); }, []);
 
-  async function loadHabits() {
-    setLoading(true);
-    const { data } = await getHabits(USER_ID);
+  async function initScreen() {
+    const user = await getCurrentUser();
+    if (user) { setUserId(user.id); await loadHabits(user.id); }
+  }
+
+  async function loadHabits(uid) {
+    setLoading(true); setError(null);
+    const { data, error } = await getHabits(uid);
+    if (error) { setError('No se pudieron cargar los habitos.'); setLoading(false); return; }
     if (data && data.length === 0) {
-      await createHabit(USER_ID, 'Entrenamiento');
-      await createHabit(USER_ID, 'Lectura');
-      await createHabit(USER_ID, 'Meditacion');
-      const { data: newData } = await getHabits(USER_ID);
+      await createHabit(uid, 'Entrenamiento');
+      await createHabit(uid, 'Lectura');
+      await createHabit(uid, 'Meditacion');
+      const { data: newData } = await getHabits(uid);
       setHabits(newData || []);
-    } else {
-      setHabits(data || []);
-    }
+    } else { setHabits(data || []); }
     setLoading(false);
   }
 
   async function handleToggle(habit) {
-    const updatedHabits = habits.map(h =>
-      h.id === habit.id ? { ...h, completed: !h.completed } : h
-    );
+    const updatedHabits = habits.map(h => h.id === habit.id ? { ...h, completed: !h.completed } : h);
     await toggleHabit(habit.id, !habit.completed);
     setHabits(updatedHabits);
     const allDone = updatedHabits.every(h => h.completed);
-    if (allDone) {
-      const newStreak = await updateStreak();
-      setStreak(newStreak);
-    }
+    if (allDone && userId) { const newStreak = await updateStreak(userId); setStreak(newStreak); }
   }
 
   async function handleAddHabit() {
-    if (!newHabit.trim()) return;
+    if (!newHabit.trim() || !userId) return;
     setSaving(true);
-    await createHabit(USER_ID, newHabit.trim());
-    setNewHabit('');
-    setModalVisible(false);
-    await loadHabits();
+    await createHabit(userId, newHabit.trim());
+    setNewHabit(''); setModalVisible(false);
+    await loadHabits(userId);
     setSaving(false);
   }
 
   const completed = habits.filter(h => h.completed).length;
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator color={colors.accent.primary} />
-      </View>
-    );
-  }
+  if (loading) return <View style={styles.loadingContainer}><ActivityIndicator color={colors.accent.primary} /></View>;
+  if (error) return (
+    <View style={styles.loadingContainer}>
+      <Text style={styles.errorText}>{error}</Text>
+      <TouchableOpacity onPress={() => userId && loadHabits(userId)} style={styles.retryButton}>
+        <Text style={styles.retryText}>Reintentar</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <View style={styles.wrapper}>
@@ -73,56 +72,30 @@ export default function HabitsScreen() {
           <Text style={styles.title}>Habitos</Text>
           <Text style={styles.subtitle}>{completed} de {habits.length} completados</Text>
         </View>
-
-        {streak > 0 && (
-          <View style={styles.streakBanner}>
-            <Text style={styles.streakBannerText}>Racha activa: {streak} dia{streak > 1 ? 's' : ''}</Text>
-          </View>
-        )}
-
+        {streak > 0 && <View style={styles.streakBanner}><Text style={styles.streakBannerText}>Racha activa: {streak} dia{streak > 1 ? 's' : ''}</Text></View>}
         <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: habits.length > 0 ? `${(completed / habits.length) * 100}%` : '0%' }]} />
+          <View style={[styles.progressFill, { width: habits.length > 0 ? (completed / habits.length * 100) + '%' : '0%' }]} />
         </View>
-
         <View style={styles.list}>
           {habits.map((habit) => (
-            <TouchableOpacity
-              key={habit.id}
-              style={[styles.habitCard, habit.completed && styles.habitCardDone]}
-              onPress={() => handleToggle(habit)}
-            >
+            <TouchableOpacity key={habit.id} style={[styles.habitCard, habit.completed && styles.habitCardDone]} onPress={() => handleToggle(habit)}>
               <View style={[styles.check, habit.completed && styles.checkDone]}>
                 {habit.completed && <Text style={styles.checkMark}>✓</Text>}
               </View>
-              <Text style={[styles.habitName, habit.completed && styles.habitNameDone]}>
-                {habit.name}
-              </Text>
+              <Text style={[styles.habitName, habit.completed && styles.habitNameDone]}>{habit.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
-
       <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
         <Text style={styles.addButtonText}>+ Nuevo habito</Text>
       </TouchableOpacity>
-
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>Nuevo habito</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Nombre del habito"
-              placeholderTextColor={colors.text.tertiary}
-              value={newHabit}
-              onChangeText={setNewHabit}
-              autoFocus
-            />
-            <TouchableOpacity
-              style={[styles.modalButton, (!newHabit.trim() || saving) && styles.buttonDisabled]}
-              onPress={handleAddHabit}
-              disabled={!newHabit.trim() || saving}
-            >
+            <TextInput style={styles.modalInput} placeholder="Nombre del habito" placeholderTextColor={colors.text.tertiary} value={newHabit} onChangeText={setNewHabit} autoFocus />
+            <TouchableOpacity style={[styles.modalButton, (!newHabit.trim() || saving) && styles.buttonDisabled]} onPress={handleAddHabit} disabled={!newHabit.trim() || saving}>
               <Text style={styles.modalButtonText}>{saving ? 'Guardando...' : 'Agregar'}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
@@ -140,6 +113,9 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: spacing.lg, paddingTop: spacing.xxl, paddingBottom: spacing.xxl },
   loadingContainer: { flex: 1, backgroundColor: colors.background.primary, alignItems: 'center', justifyContent: 'center' },
+  errorText: { fontSize: typography.sizes.md, color: colors.error, marginBottom: spacing.md, textAlign: 'center' },
+  retryButton: { backgroundColor: colors.accent.primary, paddingVertical: spacing.sm, paddingHorizontal: spacing.lg, borderRadius: 8 },
+  retryText: { color: colors.text.primary, fontSize: typography.sizes.sm, fontWeight: typography.weights.medium },
   header: { marginBottom: spacing.md },
   title: { fontSize: typography.sizes.xxl, fontWeight: typography.weights.bold, color: colors.text.primary, marginBottom: spacing.xs },
   subtitle: { fontSize: typography.sizes.sm, color: colors.text.secondary },
