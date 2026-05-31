@@ -1,8 +1,9 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Text, ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { useState, useEffect } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import WelcomeScreen from '../screens/onboarding/WelcomeScreen';
 import GoalScreen from '../screens/onboarding/GoalScreen';
 import NameScreen from '../screens/onboarding/NameScreen';
@@ -45,7 +46,7 @@ function TabNavigator({ route }) {
         initialParams={{ name }}
         options={{
           tabBarLabel: 'Inicio',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>{String.fromCharCode(8962)}</Text>,
+          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" color={color} size={size} />,
         }}
       />
       <Tab.Screen
@@ -53,7 +54,7 @@ function TabNavigator({ route }) {
         component={HabitsScreen}
         options={{
           tabBarLabel: 'Hábitos',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>{String.fromCharCode(10003)}</Text>,
+          tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-circle-outline" color={color} size={size} />,
         }}
       />
       <Tab.Screen
@@ -61,7 +62,7 @@ function TabNavigator({ route }) {
         component={ProgressScreen}
         options={{
           tabBarLabel: 'Progreso',
-          tabBarIcon: ({ color }) => <Text style={{ fontSize: 18, color }}>{String.fromCharCode(8679)}</Text>,
+          tabBarIcon: ({ color, size }) => <Ionicons name="trending-up-outline" color={color} size={size} />,
         }}
       />
     </Tab.Navigator>
