@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { colors, typography, spacing } from '../../theme';
 
 const goals = [
-  { id: 'fitness', label: 'Mejorar mi condicion fisica' },
-  { id: 'habits', label: 'Construir habitos solidos' },
+  { id: 'fitness', label: 'Mejorar mi condición física' },
+  { id: 'habits', label: 'Construir hábitos sólidos' },
   { id: 'mental', label: 'Fortalecer mi disciplina mental' },
-  { id: 'transformation', label: 'Transformacion completa' },
+  { id: 'transformation', label: 'Transformación completa' },
 ];
 
 export default function GoalScreen({ navigation }) {
@@ -15,8 +15,8 @@ export default function GoalScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.top}>
-        <Text style={styles.title}>¿Cual es tu meta?</Text>
-        <Text style={styles.subtitle}>Define tu proposito. HEXIS hara el resto.</Text>
+        <Text style={styles.title}>¿Cuál es tu meta?</Text>
+        <Text style={styles.subtitle}>Define tu propósito. HEXIS hará el resto.</Text>
       </View>
       <View style={styles.options}>
         {goals.map((goal) => (
@@ -31,7 +31,7 @@ export default function GoalScreen({ navigation }) {
       </View>
       <TouchableOpacity
         style={[styles.button, !selected && styles.buttonDisabled]}
-        onPress={() => selected && navigation.navigate('Name')}
+        onPress={() => selected && navigation.navigate('Name', { goal: selected })}
       >
         <Text style={styles.buttonText}>Continuar</Text>
       </TouchableOpacity>
