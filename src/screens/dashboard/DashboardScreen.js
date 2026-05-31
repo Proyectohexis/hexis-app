@@ -2,51 +2,78 @@ import { StyleSheet, Text, View, ScrollView, ActivityIndicator } from 'react-nat
 import { useState, useEffect } from 'react';
 import { colors, typography, spacing } from '../../theme';
 import { getStreak } from '../../lib/streaks';
+import { getHabits } from '../../lib/habits';
 import { getCurrentUser } from '../../lib/auth';
 
 export default function DashboardScreen({ route }) {
   const [streak, setStreak] = useState(0);
-  const [name, setName] = useState(route?.params?.name || 'Atleta');
+  const [habits, setHabits] = useState([]);
   const [loading, setLoading] = useState(true);
-  const today = new Date().toLocaleDateString('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  });
+  const [userName, setUserName] = useState('');
 
-  useEffect(() => {
-    initDashboard();
-  }, []);
+  useEffect(() => { initScreen(); }, []);
 
-  async function initDashboard() {
-    const user = await getCurrentUser();
-    if (user) {
-      if (user.user_metadata?.name) setName(user.user_metadata.name);
-      const { data } = await getStreak(user.id);
-      if (data) setStreak(data.current_streak);
+  async function initScreen() {
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        const name = user.user_metadata?.name || route?.params?.name || 'Atleta';
+        setUserName(name);
+        const [streakData, habitsData] = await Promise.all([
+          getStreak(user.id),
+          getHabits(user.id),
+        ]);
+        setStreak(streakData || 0);
+        setHabits(habitsData.data || []);
+      }
+    } catch (e) {
+      console.log('Error dashboard:', e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator color={colors.accent.primary} />
-      </View>
-    );
-  }
+  const completedHabits = habits.filter(h => h.completed).length;
+  const totalHabits = habits.length;
+
+  if (loading) return (
+    <View style={styles.loadingContainer}>
+      <ActivityIndicator color={colors.accent.primary} />
+    </View>
+  );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.date}>{today}</Text>
-        <Text style={styles.greeting}>Bienvenido, {name}.</Text>
-        <Text style={styles.subtitle}>Tu disciplina construye tu destino.</Text>
+        <Text style={styles.greeting}>Bienvenido,</Text>
+        <Text style={styles.name}>{userName}</Text>
+        <Text style={styles.subtitle}>Compromiso. Disciplina. Transformación.</Text>
       </View>
+
       <View style={styles.streakCard}>
-        <Text style={styles.streakLabel}>Racha activa</Text>
         <Text style={styles.streakNumber}>{streak}</Text>
-        <Text style={styles.streakUnit}>{streak === 1 ? 'dia' : 'dias'}</Text>
+        <Text style={styles.streakLabel}>días de racha</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Hábitos de hoy</Text>
+        {totalHabits === 0 ? (
+          <Text style={styles.emptyText}>Ve a Hábitos para agregar tus primeros hábitos.</Text>
+        ) : (
+          <>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: (completedHabits / totalHabits * 100) + '%' }]} />
+            </View>
+            <Text style={styles.progressText}>{completedHabits} de {totalHabits} completados</Text>
+          </>
+        )}
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Tu propósito</Text>
+        <Text style={styles.purposeText}>
+          Cada hábito que construyes hoy define quién serás mañana. La disciplina no es un destino — es el camino.
+        </Text>
       </View>
     </ScrollView>
   );
@@ -57,11 +84,17 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: spacing.lg, paddingTop: spacing.xxl, paddingBottom: spacing.xxl },
   loadingContainer: { flex: 1, backgroundColor: colors.background.primary, alignItems: 'center', justifyContent: 'center' },
   header: { marginBottom: spacing.xl },
-  date: { fontSize: typography.sizes.sm, color: colors.text.tertiary, marginBottom: spacing.xs, textTransform: 'capitalize' },
-  greeting: { fontSize: typography.sizes.xxl, fontWeight: typography.weights.bold, color: colors.text.primary, marginBottom: spacing.xs },
-  subtitle: { fontSize: typography.sizes.sm, color: colors.text.secondary },
-  streakCard: { backgroundColor: colors.background.card, borderRadius: 16, padding: spacing.lg, alignItems: 'center', marginBottom: spacing.xl, borderWidth: 1, borderColor: colors.accent.muted },
-  streakLabel: { fontSize: typography.sizes.sm, color: colors.accent.primary, letterSpacing: 2, marginBottom: spacing.sm },
-  streakNumber: { fontSize: 72, fontWeight: typography.weights.bold, color: colors.text.primary, lineHeight: 80 },
-  streakUnit: { fontSize: typography.sizes.md, color: colors.text.secondary },
+  greeting: { fontSize: typography.sizes.md, color: colors.text.secondary },
+  name: { fontSize: typography.sizes.xxxl, fontWeight: typography.weights.bold, color: colors.text.primary, marginBottom: spacing.xs },
+  subtitle: { fontSize: typography.sizes.xs, color: colors.accent.primary, letterSpacing: 2 },
+  streakCard: { backgroundColor: colors.background.card, borderRadius: 16, padding: spacing.xl, alignItems: 'center', marginBottom: spacing.xl, borderWidth: 1, borderColor: colors.accent.muted },
+  streakNumber: { fontSize: 64, fontWeight: typography.weights.bold, color: colors.accent.primary, lineHeight: 72 },
+  streakLabel: { fontSize: typography.sizes.sm, color: colors.text.secondary, letterSpacing: 2, textTransform: 'uppercase' },
+  section: { backgroundColor: colors.background.card, borderRadius: 16, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.border.default },
+  sectionTitle: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.text.primary, marginBottom: spacing.md },
+  progressBar: { height: 4, backgroundColor: colors.border.default, borderRadius: 2, marginBottom: spacing.sm },
+  progressFill: { height: 4, backgroundColor: colors.accent.primary, borderRadius: 2 },
+  progressText: { fontSize: typography.sizes.sm, color: colors.text.secondary },
+  emptyText: { fontSize: typography.sizes.sm, color: colors.text.tertiary },
+  purposeText: { fontSize: typography.sizes.sm, color: colors.text.secondary, lineHeight: 22, fontStyle: 'italic' },
 });

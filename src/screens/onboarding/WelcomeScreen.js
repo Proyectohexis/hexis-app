@@ -6,7 +6,7 @@ export default function WelcomeScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.center}>
         <Text style={styles.logo}>HEXIS</Text>
-        <Text style={styles.slogan}>Compromiso. Disciplina. Transformacion.</Text>
+        <Text style={styles.slogan}>Compromiso. Disciplina. Transformación.</Text>
       </View>
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Goal')}>
         <Text style={styles.buttonText}>Comenzar</Text>
