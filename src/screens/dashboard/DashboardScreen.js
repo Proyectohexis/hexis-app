@@ -20,7 +20,7 @@ export default function DashboardScreen({ route }) {
         const name = user.user_metadata?.name || route?.params?.name || 'Atleta';
         setUserName(name);
         const [streakData, habitsData] = await Promise.all([
-          getStreak(user.id),
+          getStreak(user.id).then(({ data }) => data?.current_streak || 0),
           getHabits(user.id),
         ]);
         setStreak(streakData || 0);
