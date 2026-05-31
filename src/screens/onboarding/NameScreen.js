@@ -32,6 +32,14 @@ export default function NameScreen({ navigation, route }) {
     }
 
     if (data?.user) {
+      // Guardar meta en la tabla streaks
+      await supabase.from('streaks').upsert([{
+        user_id: data.user.id,
+        goal,
+        current_streak: 0,
+        last_completed: null,
+      }]);
+
       navigation.reset({
         index: 0,
         routes: [{ name: 'Main', params: { name } }],
