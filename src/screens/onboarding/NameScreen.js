@@ -17,7 +17,7 @@ export default function NameScreen({ navigation, route }) {
     setLoading(true);
     setError('');
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -28,7 +28,17 @@ export default function NameScreen({ navigation, route }) {
     if (error) {
       setError(error.message);
       setLoading(false);
+      return;
     }
+
+    if (data?.user) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Main', params: { name } }],
+      });
+    }
+
+    setLoading(false);
   }
 
   return (
