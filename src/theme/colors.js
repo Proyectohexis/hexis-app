@@ -9,25 +9,18 @@ export const colors = {
 
   // Texto
   text: {
-    primary: '#F5F2EB',
+    primary: '#F0EDE6',
     secondary: '#A09E99',
     tertiary: '#5C5A57',
     inverse: '#0A0A0A',
   },
 
-  // Acento principal — esmeralda HEXIS
+  // Acento principal — dorado HEXIS
   accent: {
-    primary: '#1D9E75',
-    light: '#5DCAA5',
-    dark: '#0F6E56',
-    muted: '#0D3D2E',
-  },
-
-  // Dorado — uso puntual, premium
-  gold: {
-    primary: '#C9A84C',
+    primary: '#C9A96E',
     light: '#E8C97A',
-    muted: '#3D2F0F',
+    dark: '#A6813E',
+    muted: '#2A2010',
   },
 
   // Estados
