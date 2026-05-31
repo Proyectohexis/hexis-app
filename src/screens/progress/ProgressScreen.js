@@ -18,23 +18,34 @@ export default function ProgressScreen() {
   }, []);
 
   async function initScreen() {
-    const user = await getCurrentUser();
-    if (user) {
-      setUserId(user.id);
-      await loadProgress(user.id);
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        setUserId(user.id);
+        await loadProgress(user.id);
+      } else {
+        setLoading(false);
+      }
+    } catch (e) {
+      setLoading(false);
     }
   }
 
   async function loadProgress(uid) {
     setLoading(true);
     setError(null);
-    const { data, error } = await getProgress(uid);
-    if (error) {
+    try {
+      const { data, error } = await getProgress(uid);
+      if (error) {
+        setError('No se pudo cargar el progreso.');
+      } else {
+        setRecords(data || []);
+      }
+    } catch (e) {
       setError('No se pudo cargar el progreso.');
-    } else {
-      setRecords(data || []);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   async function handleSave() {
@@ -69,8 +80,8 @@ export default function ProgressScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <Text style={styles.title}>Progreso fisico</Text>
-        <Text style={styles.subtitle}>Registra tu evolucion dia a dia.</Text>
+        <Text style={styles.title}>Progreso físico</Text>
+        <Text style={styles.subtitle}>Registra tu evolución día a día.</Text>
       </View>
       <View style={styles.form}>
         <Text style={styles.label}>Peso (kg)</Text>
@@ -85,7 +96,7 @@ export default function ProgressScreen() {
         <Text style={styles.label}>Notas</Text>
         <TextInput
           style={[styles.input, styles.inputMultiline]}
-          placeholder="Como te sientes hoy..."
+          placeholder="Cómo te sientes hoy..."
           placeholderTextColor={colors.text.tertiary}
           value={notes}
           onChangeText={setNotes}
