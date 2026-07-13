@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.19.x
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Parse source
+        run: npm run verify:syntax
+
+      - name: Verify declared dependencies
+        run: npm run verify:deps
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Expo Doctor
+        run: npm run doctor
+
+      - name: Android production bundle
+        run: npm run export:android
+
+      - name: iOS production bundle
+        run: npm run export:ios
+
+      - name: Block critical dependency advisories
+        run: npm audit --audit-level=critical
+
+  database-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Supabase CLI 2.84.2
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.84.2
+
+      - name: Start isolated Supabase stack
+        run: supabase start
+
+      - name: Apply migrations from zero
+        run: supabase db reset
+
+      - name: RLS and domain database tests
+        run: supabase test db

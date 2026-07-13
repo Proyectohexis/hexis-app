@@ -1,25 +1,110 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
-import { colors, typography, spacing } from '../../theme';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { colors, spacing, typography } from '../../theme';
+import { trackProductEvent } from '../../analytics/analytics';
 
 export default function WelcomeScreen({ navigation }) {
+  function startOnboarding() {
+    void trackProductEvent('onboarding_started', { entry_point: 'signup' });
+    navigation.navigate('Goal');
+  }
+
   return (
-    <View style={styles.container}>
-      <View style={styles.center}>
-        <Text style={styles.logo}>HEXIS</Text>
-        <Text style={styles.slogan}>Compromiso. Disciplina. Transformación.</Text>
-      </View>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Goal')}>
-        <Text style={styles.buttonText}>Comenzar</Text>
-      </TouchableOpacity>
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.copy}>
+          <Text style={styles.eyebrow}>COMPROMISO · DISCIPLINA · TRANSFORMACIÓN</Text>
+          <Text accessibilityRole="header" style={styles.logo}>HEXIS</Text>
+          <Text style={styles.title}>Convierte tus decisiones en evidencia.</Text>
+          <Text style={styles.description}>
+            Define quién estás construyendo. Cumple lo que importa. Revisa lo que realmente cambia.
+          </Text>
+        </View>
+
+        <View style={styles.actions}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Comenzar mi compromiso"
+            style={styles.primaryButton}
+            onPress={startOnboarding}
+          >
+            <Text style={styles.primaryButtonText}>Comenzar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            style={styles.secondaryButton}
+            onPress={() => navigation.navigate('Login')}
+          >
+            <Text style={styles.secondaryButtonText}>Ya tengo cuenta</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background.primary, paddingHorizontal: spacing.lg, justifyContent: 'space-between', paddingBottom: spacing.xxl },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  logo: { fontSize: typography.sizes.xxxl, fontWeight: typography.weights.bold, color: colors.text.primary, letterSpacing: 8, marginBottom: spacing.sm },
-  slogan: { fontSize: typography.sizes.sm, color: colors.accent.primary, letterSpacing: 2, textAlign: 'center' },
-  button: { backgroundColor: colors.accent.primary, paddingVertical: spacing.md, borderRadius: 12, alignItems: 'center' },
-  buttonText: { fontSize: typography.sizes.md, fontWeight: typography.weights.semibold, color: colors.text.primary, letterSpacing: 1 },
+  safeArea: { flex: 1, backgroundColor: colors.background.primary },
+  container: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl,
+  },
+  copy: { flex: 1, justifyContent: 'center' },
+  eyebrow: {
+    color: colors.accent.primary,
+    fontFamily: typography.fonts.semibold,
+    fontSize: typography.sizes.xs,
+    lineHeight: typography.lineHeights.xs,
+    letterSpacing: 1.8,
+    marginBottom: spacing.lg,
+  },
+  logo: {
+    color: colors.text.primary,
+    fontFamily: typography.fonts.bold,
+    fontSize: 48,
+    lineHeight: 56,
+    letterSpacing: 10,
+    marginBottom: spacing.xl,
+  },
+  title: {
+    color: colors.text.primary,
+    fontFamily: typography.fonts.bold,
+    fontSize: typography.sizes.xxl,
+    lineHeight: typography.lineHeights.xxl,
+    marginBottom: spacing.md,
+    maxWidth: 420,
+  },
+  description: {
+    color: colors.text.secondary,
+    fontFamily: typography.fonts.regular,
+    fontSize: typography.sizes.md,
+    lineHeight: typography.lineHeights.md,
+    maxWidth: 440,
+  },
+  actions: { gap: spacing.sm },
+  primaryButton: {
+    minHeight: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: colors.accent.primary,
+    paddingHorizontal: spacing.lg,
+  },
+  primaryButtonText: {
+    color: colors.text.inverse,
+    fontFamily: typography.fonts.semibold,
+    fontSize: typography.sizes.md,
+  },
+  secondaryButton: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondaryButtonText: {
+    color: colors.text.secondary,
+    fontFamily: typography.fonts.medium,
+    fontSize: typography.sizes.sm,
+  },
 });

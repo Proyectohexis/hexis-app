@@ -1,7 +1,11 @@
 export const typography = {
   fonts: {
-    heading: 'Satoshi',
-    body: 'Inter',
+    regular: 'Inter_400Regular',
+    medium: 'Inter_500Medium',
+    semibold: 'Inter_600SemiBold',
+    bold: 'Inter_700Bold',
+    heading: 'Inter_700Bold',
+    body: 'Inter_400Regular',
   },
 
   sizes: {
@@ -22,8 +26,12 @@ export const typography = {
   },
 
   lineHeights: {
-    tight: 1.2,
-    normal: 1.5,
-    relaxed: 1.7,
+    xs: 16,
+    sm: 19,
+    md: 23,
+    lg: 26,
+    xl: 30,
+    xxl: 36,
+    xxxl: 44,
   },
 };
