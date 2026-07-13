@@ -17,6 +17,7 @@ Evidencia local del 12 de julio de 2026:
 - bundles Hermes Android 3.50 MB e iOS 3.49 MB generados.
 - siete migraciones aplicadas desde cero en el stack oficial local de Supabase y pgTAP 68/68.
 - E2E adverso de privacidad correcto contra Auth/REST/Edge Functions locales, incluida respuesta perdida y aislamiento A/B.
+- GitHub Actions CI #1 correcta para el commit `79916fe` (`mobile-checks` y `database-checks`).
 - carga y render inicial confirmados en un Android físico con Expo Go 54 por LAN; validación funcional nativa aún pendiente.
 - `npm audit --omit=dev --audit-level=critical`: cero vulnerabilidades altas o críticas; permanecen avisos moderados transitivos de Expo que no deben corregirse forzando un salto de SDK.
 
@@ -51,6 +52,7 @@ El proveedor de analítica/observabilidad, validación física completa y builds
 - `docs/architecture/TECHNICAL_ARCHITECTURE.md`
 - `docs/roadmap/DEVELOPMENT_PLAN.md`
 - `supabase/README.md`
+- `INFORME_COMPLETO_APLICACION_HEXIS_2026-07-12.md`
 - `INFORME_AUDITORIA_INTEGRAL_2026-07-11.md`
 - `INFORME_REAUDITORIA_FUNDACIONAL_2026-07-11.md`
 
@@ -132,7 +134,7 @@ No apliques las migraciones al remoto hasta completar inventario, backup/restaur
 - Los reintentos conservan `client_operation_id` y detectan reutilización con payload distinto.
 - La cola offline no guarda texto libre; Android backup está deshabilitado. Su cifrado completo en reposo y la prueba nativa de reinstalación siguen siendo gates.
 - No se envían email, identidad, hábitos, notas ni métricas a analítica.
-- El repositorio aún necesita decisión formal de licencia y visibilidad.
+- El repositorio está público y necesita una decisión formal de gobierno: el `LICENSE` MIT aún conserva el copyright heredado del template Expo.
 
 ## Alcance de producto
 
