@@ -1,6 +1,6 @@
 {
   "name": "hexis-app",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "HEXIS — sistema móvil de transformación personal basada en identidad, disciplina y evidencia.",
   "main": "index.js",
   "scripts": {

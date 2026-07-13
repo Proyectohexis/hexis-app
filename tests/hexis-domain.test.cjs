@@ -10,7 +10,9 @@ const {
   deriveCompletionState,
   deriveCompletionStates,
   endOfIsoWeek,
+  evaluateWeeklyReviewEligibility,
   evaluateSecWeek,
+  getPreviousClosedIsoWeek,
   isCommitmentScheduled,
   listScheduledOpportunities,
   parseDateKey,
@@ -76,6 +78,68 @@ test('las fechas civiles son estrictas y el calendario usa domingo=0', () => {
   assert.equal(addDays('2026-12-31', 1), '2027-01-01');
   assert.equal(startOfIsoWeek('2026-07-12'), '2026-07-06');
   assert.equal(endOfIsoWeek('2026-07-06'), '2026-07-12');
+});
+
+test('la revisión selecciona la última semana ISO cerrada en la frontera del lunes', () => {
+  assert.deepEqual(getPreviousClosedIsoWeek('2026-07-12'), {
+    available_on: '2026-07-06',
+    week_end: '2026-07-05',
+    week_start: '2026-06-29',
+  });
+  assert.deepEqual(getPreviousClosedIsoWeek('2026-07-13'), {
+    available_on: '2026-07-13',
+    week_end: '2026-07-12',
+    week_start: '2026-07-06',
+  });
+  assert.deepEqual(getPreviousClosedIsoWeek('2027-01-04'), {
+    available_on: '2027-01-04',
+    week_end: '2027-01-03',
+    week_start: '2026-12-28',
+  });
+});
+
+test('un plan nuevo no ofrece una revisión anterior y comunica su primera fecha', () => {
+  const result = evaluateWeeklyReviewEligibility({
+    as_of_date: '2026-07-13',
+    plan: makePlan({ starts_on: '2026-07-13' }),
+    week_start: '2026-07-06',
+  });
+
+  assert.equal(result.eligible, false);
+  assert.equal(result.overlaps_plan, false);
+  assert.equal(result.eligibility_reason, 'week_before_plan');
+  assert.equal(result.first_review_available_on, '2026-07-20');
+});
+
+test('una semana parcial es elegible cuando toca la vigencia inclusiva del plan', () => {
+  const startsOnSunday = evaluateWeeklyReviewEligibility({
+    as_of_date: '2026-07-13',
+    plan: makePlan({ starts_on: '2026-07-12' }),
+    week_start: '2026-07-06',
+  });
+  const endsOnMonday = evaluateWeeklyReviewEligibility({
+    as_of_date: '2026-07-13',
+    plan: makePlan({ ends_on: '2026-07-06', status: 'completed' }),
+    week_start: '2026-07-06',
+  });
+
+  assert.equal(startsOnSunday.eligible, true);
+  assert.equal(startsOnSunday.overlaps_plan, true);
+  assert.equal(startsOnSunday.first_review_available_on, '2026-07-13');
+  assert.equal(endsOnMonday.eligible, true);
+  assert.equal(endsOnMonday.overlaps_plan, true);
+});
+
+test('una revisión nunca es elegible hasta que termine el domingo en fecha civil', () => {
+  const result = evaluateWeeklyReviewEligibility({
+    as_of_date: '2026-07-12',
+    plan: makePlan(),
+    week_start: '2026-07-06',
+  });
+
+  assert.equal(result.eligible, false);
+  assert.equal(result.week_closed, false);
+  assert.equal(result.eligibility_reason, 'week_not_closed');
 });
 
 test('validateInitialPlan acepta el contrato de onboarding sin IDs', () => {

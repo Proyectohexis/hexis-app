@@ -19,6 +19,7 @@ const {
 } = require('../src/data/sync/checkInQueue.cjs');
 const {
   createPersistedCheckInQueue,
+  recoveryStorageKeyFor,
 } = require('../src/data/sync/persistedCheckInQueue.cjs');
 
 const T0 = '2026-07-12T12:00:00.000Z';
@@ -277,40 +278,305 @@ test('un reintento manual reactiva solo operaciones terminales conservando su id
   await persisted.claim({ limit: 1 });
   await persisted.fail('persisted-failed');
   assert.equal((await persisted.retryFailed('persisted-failed')).retried, 1);
-  const recovered = await persisted.list();
+  const recovered = await persisted.list({ userId: 'user-1' });
   assert.equal(recovered.items[0].operation_id, 'persisted-failed');
   assert.equal(recovered.items[0].status, 'pending');
 });
 
 test('adapter repara persistencia corrupta y conserva operaciones concurrentes', async () => {
   const key = '@test/hexis-queue';
-  const storage = memoryStorage({ [key]: '{corrupto' });
+  const privateRaw = '{"email":"persona@example.com","note":"contenido privado"';
+  const storage = memoryStorage({ [key]: privateRaw });
   const queueA = createPersistedCheckInQueue({
     storage,
     storageKey: key,
     clock: () => T0,
   });
-  const recovered = await queueA.list();
+  const recovered = await queueA.list({ userId: 'user-1' });
   assert.equal(recovered.recovered, true);
   assert.equal(recovered.reason, 'invalid_json');
+  assert.deepEqual(recovered.recoveryNotice, {
+    generation: 1,
+    reason: 'invalid_json',
+    detected_at: T0,
+    diagnostic_code: 'SYNC-Q02',
+  });
   assert.deepEqual(JSON.parse(storage.value(key)), { version: 1, items: [] });
+
+  const persistedNotice = storage.value(recoveryStorageKeyFor(key));
+  assert.deepEqual(JSON.parse(persistedNotice), {
+    version: 3,
+    generation: 1,
+    reason: 'invalid_json',
+    detected_at: T0,
+    acknowledgements: [],
+  });
+  assert.equal(persistedNotice.includes('persona@example.com'), false);
+  assert.equal(persistedNotice.includes('contenido privado'), false);
 
   const queueB = createPersistedCheckInQueue({
     storage,
     storageKey: key,
     clock: () => T0,
   });
+  const durableNotice = await queueB.list({ userId: 'user-1' });
+  assert.equal(durableNotice.recovered, false);
+  assert.deepEqual(durableNotice.recoveryNotice, recovered.recoveryNotice);
+
   await Promise.all([
     queueA.enqueue(operation('op-1')),
     queueB.enqueue(operation('op-2')),
   ]);
 
-  const persisted = await queueA.list();
+  const persisted = await queueA.list({ userId: 'user-1' });
   assert.equal(persisted.items.length, 2);
   assert.deepEqual(
     persisted.items.map((item) => item.operation_id).sort(),
     ['op-1', 'op-2'],
   );
+
+  assert.deepEqual(await queueB.acknowledgeRecoveryNotice({
+    userId: 'user-1',
+    generation: recovered.recoveryNotice.generation,
+    detectedAt: recovered.recoveryNotice.detected_at,
+  }), {
+    acknowledged: true,
+    reason: null,
+    recoveryNotice: null,
+  });
+  assert.equal((await queueA.list({ userId: 'user-1' })).recoveryNotice, null);
+  assert.deepEqual(JSON.parse(storage.value(recoveryStorageKeyFor(key))), {
+    version: 3,
+    generation: 1,
+    reason: 'invalid_json',
+    detected_at: T0,
+    acknowledgements: [{ user_id: 'user-1', generation: 1 }],
+  });
+});
+
+test('un acknowledge antiguo nunca silencia una recuperación más reciente', async () => {
+  const key = '@test/hexis-recovery-generation';
+  const storage = memoryStorage({ [key]: '{primera-corrupcion' });
+  const queue = createPersistedCheckInQueue({
+    storage,
+    storageKey: key,
+    clock: () => T0,
+  });
+
+  const first = (await queue.list({ userId: 'user-1' })).recoveryNotice;
+  assert.equal(first.generation, 1);
+
+  await storage.setItem(key, '{segunda-corrupcion');
+  const second = (await queue.list({ userId: 'user-1' })).recoveryNotice;
+  assert.equal(second.generation, 2);
+
+  assert.deepEqual(await queue.acknowledgeRecoveryNotice({
+    userId: 'user-1',
+    generation: first.generation,
+    detectedAt: first.detected_at,
+  }), {
+    acknowledged: false,
+    reason: 'notice_changed',
+    recoveryNotice: second,
+  });
+  assert.deepEqual(
+    (await queue.list({ userId: 'user-1' })).recoveryNotice,
+    second,
+  );
+
+  assert.deepEqual(await queue.acknowledgeRecoveryNotice({
+    userId: 'user-1',
+    generation: second.generation,
+    detectedAt: second.detected_at,
+  }), {
+    acknowledged: true,
+    reason: null,
+    recoveryNotice: null,
+  });
+});
+
+test('cada cuenta reconoce la generación de forma independiente y la siguiente vuelve a ser visible', async () => {
+  const key = '@test/hexis-recovery-multi-account';
+  const storage = memoryStorage({ [key]: '{corrupcion-compartida' });
+  const queue = createPersistedCheckInQueue({
+    storage,
+    storageKey: key,
+    clock: () => T0,
+  });
+
+  const noticeA = (await queue.list({ userId: 'user-1' })).recoveryNotice;
+  const noticeB = (await queue.list({ userId: 'user-2' })).recoveryNotice;
+  assert.deepEqual(noticeB, noticeA);
+
+  await queue.acknowledgeRecoveryNotice({
+    userId: 'user-1',
+    generation: noticeA.generation,
+    detectedAt: noticeA.detected_at,
+  });
+  const reopened = createPersistedCheckInQueue({
+    storage,
+    storageKey: key,
+    clock: () => T0,
+  });
+  assert.equal(
+    (await reopened.list({ userId: 'user-1' })).recoveryNotice,
+    null,
+  );
+  assert.deepEqual(
+    (await reopened.list({ userId: 'user-2' })).recoveryNotice,
+    noticeB,
+  );
+
+  const enqueuedA = await queue.enqueue(operation('operation-user-1'));
+  const enqueuedB = await queue.enqueue(operation('operation-user-2', {
+    user_id: 'user-2',
+  }));
+  assert.equal(enqueuedA.recoveryNotice, null);
+  assert.deepEqual(enqueuedB.recoveryNotice, noticeB);
+  assert.equal(enqueuedA.size, 1);
+  assert.equal(enqueuedB.size, 1);
+  assert.deepEqual(
+    (await queue.list({ userId: 'user-1' })).items.map((item) => item.user_id),
+    ['user-1'],
+  );
+  assert.deepEqual(
+    (await queue.list({ userId: 'user-2' })).items.map((item) => item.user_id),
+    ['user-2'],
+  );
+
+  await queue.acknowledgeRecoveryNotice({
+    userId: 'user-2',
+    generation: noticeB.generation,
+    detectedAt: noticeB.detected_at,
+  });
+  await storage.setItem(key, '{otra-corrupcion');
+  const nextA = (await queue.list({ userId: 'user-1' })).recoveryNotice;
+  const nextB = (await queue.list({ userId: 'user-2' })).recoveryNotice;
+  assert.equal(nextA.generation, noticeA.generation + 1);
+  assert.deepEqual(nextB, nextA);
+});
+
+test('migra marcadores anteriores y repara uno ilegible con un aviso sintético', async () => {
+  const keyV1 = '@test/hexis-recovery-v1';
+  const recoveryV1 = recoveryStorageKeyFor(keyV1);
+  const storageV1 = memoryStorage({
+    [keyV1]: serializeQueue([]),
+    [recoveryV1]: JSON.stringify({
+      version: 1,
+      reason: 'invalid_json',
+      detected_at: T0,
+    }),
+  });
+  const queueV1 = createPersistedCheckInQueue({
+    storage: storageV1,
+    storageKey: keyV1,
+    clock: () => T0,
+  });
+  const migrated = await queueV1.list({ userId: 'user-1' });
+  assert.equal(migrated.recoveryNotice.generation, 1);
+  assert.equal(JSON.parse(storageV1.value(recoveryV1)).version, 3);
+
+  const keyV2 = '@test/hexis-recovery-v2-inactive';
+  const recoveryV2 = recoveryStorageKeyFor(keyV2);
+  const storageV2 = memoryStorage({
+    [keyV2]: serializeQueue([]),
+    [recoveryV2]: JSON.stringify({
+      version: 2,
+      generation: 7,
+      active: false,
+      reason: null,
+      detected_at: null,
+    }),
+  });
+  const queueV2 = createPersistedCheckInQueue({
+    storage: storageV2,
+    storageKey: keyV2,
+    clock: () => T0,
+  });
+  const syntheticA = await queueV2.list({ userId: 'user-1' });
+  const syntheticB = await queueV2.list({ userId: 'user-2' });
+  assert.deepEqual(syntheticA.recoveryNotice, {
+    generation: 8,
+    reason: 'recovery_notice_unreadable',
+    detected_at: T0,
+    diagnostic_code: 'SYNC-Q06',
+  });
+  assert.deepEqual(syntheticB.recoveryNotice, syntheticA.recoveryNotice);
+
+  const keyInvalid = '@test/hexis-recovery-invalid-marker';
+  const invalidRecoveryKey = recoveryStorageKeyFor(keyInvalid);
+  const storageInvalid = memoryStorage({
+    [keyInvalid]: serializeQueue([]),
+    [invalidRecoveryKey]: '{marcador-ilegible',
+  });
+  const queueInvalid = createPersistedCheckInQueue({
+    storage: storageInvalid,
+    storageKey: keyInvalid,
+    clock: () => T0,
+  });
+  const repaired = await queueInvalid.list({ userId: 'user-1' });
+  assert.equal(repaired.recoveryNotice.diagnostic_code, 'SYNC-Q06');
+  assert.equal(JSON.parse(storageInvalid.value(invalidRecoveryKey)).version, 3);
+});
+
+test('si falla el reset después del aviso conserva el raw y la siguiente recuperación avanza generación', async () => {
+  const key = '@test/hexis-recovery-second-write-failure';
+  const recoveryKey = recoveryStorageKeyFor(key);
+  const values = new Map([[key, '{contenido-privado-corrupto']]);
+  let failReset = true;
+  const storage = {
+    async getItem(requestedKey) {
+      return values.has(requestedKey) ? values.get(requestedKey) : null;
+    },
+    async setItem(requestedKey, value) {
+      if (requestedKey === key && failReset) throw new Error('queue reset unavailable');
+      values.set(requestedKey, value);
+    },
+  };
+  const queue = createPersistedCheckInQueue({
+    storage,
+    storageKey: key,
+    clock: () => T0,
+  });
+
+  await assert.rejects(
+    () => queue.list({ userId: 'user-1' }),
+    /queue reset unavailable/,
+  );
+  assert.equal(values.get(key), '{contenido-privado-corrupto');
+  assert.equal(JSON.parse(values.get(recoveryKey)).generation, 1);
+  assert.equal(values.get(recoveryKey).includes('contenido-privado'), false);
+
+  failReset = false;
+  const recovered = await queue.list({ userId: 'user-1' });
+  assert.equal(recovered.recoveryNotice.generation, 2);
+  assert.deepEqual(JSON.parse(values.get(key)), { version: 1, items: [] });
+});
+
+test('no descarta una cola ilegible si no puede persistir primero el aviso', async () => {
+  const key = '@test/hexis-recovery-write-failure';
+  const recoveryKey = recoveryStorageKeyFor(key);
+  const values = new Map([[key, '{corrupto']]);
+  const storage = {
+    async getItem(requestedKey) {
+      return values.has(requestedKey) ? values.get(requestedKey) : null;
+    },
+    async setItem(requestedKey, value) {
+      if (requestedKey === recoveryKey) throw new Error('storage unavailable');
+      values.set(requestedKey, value);
+    },
+  };
+  const queue = createPersistedCheckInQueue({
+    storage,
+    storageKey: key,
+    clock: () => T0,
+  });
+
+  await assert.rejects(
+    () => queue.list({ userId: 'user-1' }),
+    /storage unavailable/,
+  );
+  assert.equal(values.get(key), '{corrupto');
 });
 
 test('clearForUser elimina atomicamente solo la cola de la cuenta indicada', async () => {
@@ -336,13 +602,45 @@ test('clearForUser elimina atomicamente solo la cola de la cuenta indicada', asy
   ]);
 
   assert.equal(cleared.removed, 1);
-  const persisted = await queueA.list();
+  const persisted = await queueA.list({ userId: 'user-2' });
   assert.deepEqual(
     persisted.items.map((item) => [item.operation_id, item.user_id]).sort(),
     [
       ['user-2-concurrent', 'user-2'],
       ['user-2-operation', 'user-2'],
     ],
+  );
+});
+
+test('clearForUser elimina también el acknowledgement local de esa cuenta', async () => {
+  const key = '@test/hexis-clear-user-recovery-ack';
+  const recoveryKey = recoveryStorageKeyFor(key);
+  const storage = memoryStorage({ [key]: '{corrupcion' });
+  const queue = createPersistedCheckInQueue({
+    storage,
+    storageKey: key,
+    clock: () => T0,
+  });
+  const notice = (await queue.list({ userId: 'user-1' })).recoveryNotice;
+  await queue.acknowledgeRecoveryNotice({
+    userId: 'user-1',
+    generation: notice.generation,
+    detectedAt: notice.detected_at,
+  });
+  assert.equal(
+    JSON.parse(storage.value(recoveryKey)).acknowledgements.length,
+    1,
+  );
+
+  await queue.clearForUser('user-1');
+
+  assert.deepEqual(
+    JSON.parse(storage.value(recoveryKey)).acknowledgements,
+    [],
+  );
+  assert.deepEqual(
+    (await queue.list({ userId: 'user-1' })).recoveryNotice,
+    notice,
   );
 });
 
@@ -353,7 +651,7 @@ test('clearForUser rechaza identificadores vacios sin modificar la cola', async 
 
   await assert.rejects(() => queue.clearForUser('  '), /userId es obligatorio/);
   assert.deepEqual(
-    (await queue.list()).items.map((item) => item.operation_id),
+    (await queue.list({ userId: 'user-1' })).items.map((item) => item.operation_id),
     ['preserved-operation'],
   );
 });

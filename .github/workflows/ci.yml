@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   mobile-checks:
     runs-on: ubuntu-latest
@@ -15,16 +19,47 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Node 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20.19.x
           cache: npm
 
+      - name: Scan tracked files for high-confidence secrets
+        run: node scripts/scan-secrets.cjs --report ci-evidence/secret-scan.json
+
       - name: Install exact dependencies
         run: npm ci
+
+      - name: Block high and critical dependency advisories
+        id: dependency-audit
+        shell: bash
+        run: |
+          set +e
+          npm audit --audit-level=high --json > ci-evidence/npm-audit.json
+          audit_exit=$?
+          set -e
+          node - <<'NODE'
+          const { readFileSync } = require('node:fs');
+          const report = JSON.parse(readFileSync('ci-evidence/npm-audit.json', 'utf8'));
+          const counts = report.metadata?.vulnerabilities ?? {};
+          const summary = [
+            '## Dependency audit',
+            '',
+            `- Critical: ${counts.critical ?? 'unknown'}`,
+            `- High: ${counts.high ?? 'unknown'}`,
+            `- Moderate: ${counts.moderate ?? 'unknown'}`,
+            `- Low: ${counts.low ?? 'unknown'}`,
+            '',
+            'Gate: high and critical advisories block CI.',
+          ].join('\n');
+          require('node:fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${summary}\n`);
+          NODE
+          exit "$audit_exit"
 
       - name: Parse source
         run: npm run verify:syntax
@@ -44,8 +79,25 @@ jobs:
       - name: iOS production bundle
         run: npm run export:ios
 
-      - name: Block critical dependency advisories
-        run: npm audit --audit-level=critical
+      - name: Record compact mobile evidence
+        shell: bash
+        run: |
+          {
+            echo "commit=${GITHUB_SHA}"
+            echo "node=$(node --version)"
+            echo "npm=$(npm --version)"
+            du -sh dist/android dist/ios
+            find dist/android dist/ios -type f -printf '%s %p\n' | sort -nr | sed -n '1,20p'
+          } > ci-evidence/mobile-build-summary.txt
+
+      - name: Upload compact mobile CI evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hexis-mobile-ci-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ci-evidence/
+          if-no-files-found: warn
+          retention-days: 14
 
   database-checks:
     runs-on: ubuntu-latest
@@ -53,7 +105,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Node 20
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20.19.x
 
       - name: Supabase CLI 2.84.2
         uses: supabase/setup-cli@v3
@@ -64,7 +123,42 @@ jobs:
         run: supabase start
 
       - name: Apply migrations from zero
-        run: supabase db reset
+        shell: bash
+        run: |
+          mkdir -p ci-evidence
+          set -o pipefail
+          supabase db reset 2>&1 | tee ci-evidence/db-reset.log
 
       - name: RLS and domain database tests
-        run: supabase test db
+        shell: bash
+        run: |
+          set -o pipefail
+          supabase test db 2>&1 | tee ci-evidence/pg-tap.log
+
+      - name: Adversarial privacy E2E
+        shell: bash
+        run: |
+          status_file="$RUNNER_TEMP/supabase-status.json"
+          trap 'rm -f "$status_file"' EXIT
+          supabase status -o json > "$status_file"
+          api_url="$(node -e "const s=require(process.argv[1]); process.stdout.write(s.API_URL ?? '')" "$status_file")"
+          public_key="$(node -e "const s=require(process.argv[1]); process.stdout.write(s.PUBLISHABLE_KEY || s.ANON_KEY || '')" "$status_file")"
+          rm -f "$status_file"
+          trap - EXIT
+          if [[ -z "$api_url" || -z "$public_key" ]]; then
+            echo "Supabase local did not expose API_URL and a public client key." >&2
+            exit 1
+          fi
+          set -o pipefail
+          SUPABASE_URL="$api_url" \
+            SUPABASE_PUBLISHABLE_KEY="$public_key" \
+            npm run test:privacy:e2e 2>&1 | tee ci-evidence/privacy-e2e.log
+
+      - name: Upload compact database CI evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: hexis-database-ci-evidence-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ci-evidence/
+          if-no-files-found: warn
+          retention-days: 14

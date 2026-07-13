@@ -2,6 +2,8 @@
 
 **Fecha de corte:** 12 de julio de 2026
 
+**Última actualización de ejecución:** 13 de julio de 2026
+
 **Estado base:** pre-alpha local endurecida
 
 **Gate global:** bloqueado para alpha distribuible, beta externa y producción
@@ -24,6 +26,24 @@ La ruta correcta no es añadir IA, comunidad, monetización ni más métricas. L
 
 `corregir verdad y gobierno → cerrar el núcleo → validar producto → desplegar staging → firmar builds → QA nativo → dogfood → beta privada → release controlado`
 
+### 1.1 Avance ejecutado el 13 de julio
+
+El primer corte R0/R1 ya produjo cambios verificables, sin adelantar gates externos:
+
+- versión de pre-alpha alineada a `0.1.0` en Expo, paquete y lockfile;
+- UX-01 implementado con semana ISO cerrada, zona del plan, primera fecha disponible,
+  guard de envío y limpieza del borrador/operación al cambiar cuenta, plan o semana;
+- SYNC-01 implementado con aviso durable mínimo, recuperación conservadora, confirmación
+  protegida contra concurrencia y reconocimiento aislado por cuenta/generación;
+- CI-01 endurecido para advisories high/critical, privacidad E2E, secret scan y artefactos;
+- PRV-01 documentado sin cambiar la base antes de una decisión Legal/DPO;
+- protocolo U0 listo para aprobación, con 0 participantes reclutados y 0 sesiones ejecutadas;
+- registro G0 creado; propiedad, licencia, visibilidad, IDs, cuentas y owners siguen abiertos.
+
+El estado operativo y la evidencia del corte están en
+`docs/execution/SPRINT_0_EXECUTION_2026-07-13.md`. C0 no se considera cerrado hasta que la
+revisión cruzada concluya y GitHub Actions confirme el commit publicado.
+
 ## 2. Correcciones al diagnóstico anterior
 
 La auditoría detallada encontró afirmaciones que debían matizarse o corregirse:
@@ -31,15 +51,17 @@ La auditoría detallada encontró afirmaciones que debían matizarse o corregirs
 - La pantalla de alta no solicita nombre; solicita email y contraseña.
 - El loop diario está implementado, pero el loop semanal es parcial.
 - HEX-P07 no puede figurar como completamente implementado.
-- La primera revisión puede mostrarse antes de ser elegible. La UI calcula siempre la semana anterior; el servidor rechaza correctamente una semana que no solapa el plan.
+- La primera revisión podía mostrarse antes de ser elegible. La corrección local del 13 de julio ahora calcula la última semana cerrada en la zona del plan y evita consultar/enviar una semana que no solapa su vigencia.
 - La decisión semanal solo navega a Hábitos; no identifica el compromiso ni prepara el cambio.
 - La revisión no integra la métrica de transformación.
 - El historial de métrica está limitado a 100 entradas y no tiene paginación.
 - La analítica está deshabilitada y el contrato actual, por sí solo, no permite calcular cohortes D1/D7/SEC.
 - El borrado de una entrada métrica es lógico: oculta la fila al usuario, pero conserva valor/nota y la exportación los incluye. La política y el copy deben decir si eso es retención histórica o si debe purgarse.
-- La recuperación de una cola local corrupta queda marcada internamente, pero la UI no comunica la pérdida potencial de operaciones pendientes.
+- La recuperación de una cola local corrupta quedaba marcada internamente sin comunicar la pérdida potencial. El corte del 13 de julio añadió aviso durable, recuperación fail-closed y reconocimiento aislado por cuenta; queda QA nativo.
 
-Estas correcciones no invalidan la arquitectura. Sí reabren el gate de “0 P0/P1” hasta que la elegibilidad de Revisión tenga corrección y tests.
+Estas correcciones no invalidan la arquitectura. Reabrieron el gate de “0 P0/P1”; UX-01 ya
+tiene corrección y regresiones locales, pero C0 permanece abierto hasta confirmar el conjunto
+integrado en CI remota y cerrar o aceptar explícitamente cualquier riesgo residual.
 
 ## 3. Lectura por áreas
 
@@ -49,12 +71,12 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 |---|---|---|
 | Propuesta de producto | Fuerte | Diferenciada y coherente; todavía es una hipótesis sin research |
 | Loop diario | Fuerte localmente | Hoy, check-in, mínimo, offline y retractación están bien resueltos |
-| Loop semanal | Parcial | Resume evidencia, pero no cierra elegibilidad, métrica y ajuste |
+| Loop semanal | Parcial mejorado | La elegibilidad está corregida localmente; métrica y ajuste accionable siguen abiertos |
 | UX | Prometedora | Buena semántica por código; falta validación, simplificación y QA nativo |
 | Marca | Incompleta | Sistema dark-first consistente, pero assets de Expo siguen provisionales |
 | Arquitectura | Fuerte localmente | Capas claras, dominio testeable y servidor como fuente de verdad |
 | Seguridad/privacidad | Fuerte localmente | Buenas fronteras; operación real, retención y antiabuso siguen pendientes |
-| QA automatizado | Fuerte para pre-alpha | 142 tests, 68 pgTAP y privacidad local; faltan integración y E2E móvil real |
+| QA automatizado | Fuerte para pre-alpha | El corte R1 pasa 158/158 tests locales; la evidencia histórica incluye 68 pgTAP y privacidad local; faltan E2E móvil y nuevo CI remoto |
 | Release | Inmaduro | Sin IDs nativos, proyecto EAS, builds firmados ni matriz iOS/Android |
 | Operación | No preparada | Sin observabilidad activa, soporte, on-call, SLAs o restore probado |
 | Evidencia de valor | Ausente | Sin entrevistas, usabilidad, dogfood o métricas de cohortes |
@@ -104,7 +126,7 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 
 ### 5.1 Núcleo de producto
 
-1. **Primera revisión sin elegibilidad.** Un usuario nuevo puede llegar a una semana que no solapa su plan y recibir un error del servidor.
+1. **Primera revisión sin elegibilidad — corregido localmente el 13 de julio.** Un usuario nuevo ya no consulta ni envía una semana que no solapa su plan; falta validación nativa del estado y copy.
 2. **Revisión sin contexto de identidad/meta.** La pantalla no refuerza el “para qué” del ciclo.
 3. **Revisión desconectada de transformación.** La métrica opcional no participa en la lectura semanal.
 4. **Decisión sin ejecución.** “Reducir”, “aumentar” o “sustituir” no prepara el hábito ni el cambio D+1.
@@ -132,14 +154,14 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 2. Auth local no representa producción: faltan SMTP, confirmaciones, cambio seguro, antiabuso, rate limits y CAPTCHA según la decisión de riesgo.
 3. No hay `ios.bundleIdentifier`, `android.package` ni `extra.eas.projectId`.
 4. No existen builds firmados ni QA funcional sobre binarios reales.
-5. CI solo bloquea vulnerabilidades críticas; no ejecuta privacidad adversa ni secret scan histórico y no conserva artefactos.
+5. CI del corte original solo bloqueaba vulnerabilidades críticas. El workflow del 13 de julio añade high/critical, privacidad adversa, secret scan de la revisión actual y artefactos; no cubre aún historial/entropía/binarios y debe pasar remoto.
 6. La migración `006` modifica definiciones por reemplazo textual y debe consolidarse.
 7. Falta una prueba concurrente real desde dos sesiones contra staging.
 8. La Edge Function destructiva depende de límites upstream y no tiene rate limit propio observable.
 9. Los recibos de eliminación no tienen purga programada.
 10. El custom scheme de recuperación debe complementarse con Universal Links/App Links.
 11. AsyncStorage no cifra íntegramente la cola; la minimización es buena, pero requiere threat model y aceptación.
-12. Una cola corrupta se repara a vacía sin una experiencia que informe la posible pérdida local.
+12. La recuperación silenciosa y el aislamiento multi-cuenta de cola fueron corregidos localmente el 13 de julio; quedan QA nativo y prueba de interacción real.
 13. El soft delete de métricas conserva contenido; falta decisión formal de retención y explicación al usuario.
 14. No hay lint, typecheck ni umbral de cobertura.
 15. Pantallas grandes como Disciplina, PlanSetup y AppNavigator aumentan el costo de mantenimiento.
@@ -148,7 +170,7 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 ### 5.4 Release, operación y legal
 
 1. Repositorio público con copyright MIT heredado de Expo.
-2. Versión `1.0.0` no comunica la realidad pre-alpha.
+2. La versión `1.0.0` no comunicaba la realidad pre-alpha; fue alineada a `0.1.0` el 13 de julio.
 3. Assets de icono/splash/adaptive icon son provisionales.
 4. Sin observabilidad, crash reporting, alertas o dashboard.
 5. Sin owner operativo, on-call, soporte, FAQ o runbooks probados.
@@ -471,18 +493,18 @@ Camino crítico: gobierno → integridad local/backend/producto → builds firma
 
 ### Sprint 0 — 10 días laborables
 
-| Orden | Trabajo | Owner | Salida verificable |
-|---:|---|---|---|
-| 1 | Aprobar licencia, visibilidad, IDs y owners | Dirección + Legal | Registro de decisiones firmado |
-| 2 | Corregir elegibilidad de Revisión | Product + Mobile | Tests de plan nuevo/semana/zona verdes |
-| 3 | Diseñar Revisión accionable | Product + UX | Prototipo y criterios listos para test |
-| 4 | Resolver retención de métricas | Privacy + Data | Matriz de retención aprobada |
-| 5 | Diseñar recuperación de cola corrupta | Offline + UX | Contrato y tests de no pérdida silenciosa |
-| 6 | Consolidar migración `006` | Database | Fresh install/upgrade equivalentes |
-| 7 | Endurecer CI | DevOps + Security QA | High/critical, privacy E2E, secret scan y artifacts |
-| 8 | Crear Supabase dev/staging | Cloud + Database | Entornos inventariados, sin datos reales |
-| 9 | Iniciar research | UX Research | Guion, screening y participantes reclutados |
-| 10 | Iniciar marca/confianza | Brand + Legal + Support | Brief de assets, privacidad y soporte |
+| Orden | Trabajo | Owner | Salida verificable | Estado al 13 de julio |
+|---:|---|---|---|---|
+| 1 | Aprobar licencia, visibilidad, IDs y owners | Dirección + Legal | Registro de decisiones firmado | Registro preparado; decisiones del propietario pendientes |
+| 2 | Corregir elegibilidad de Revisión | Product + Mobile | Tests de plan nuevo/semana/zona verdes | Implementado y en re-gate |
+| 3 | Diseñar Revisión accionable | Product + UX | Prototipo y criterios listos para test | Pendiente; no confundir elegibilidad con cierre del loop |
+| 4 | Resolver retención de métricas | Privacy + Data | Matriz de retención aprobada | Opciones y recomendación listas; aprobación Legal/DPO pendiente |
+| 5 | Diseñar recuperación de cola corrupta | Offline + UX | Contrato y tests de no pérdida silenciosa | Implementado y re-gate local verde; QA nativo pendiente |
+| 6 | Consolidar migración `006` | Database | Fresh install/upgrade equivalentes | Diferido hasta inventariar remoto para evitar drift |
+| 7 | Endurecer CI | DevOps + Security QA | High/critical, privacy E2E, secret scan y artifacts | Implementado localmente; run remoto pendiente |
+| 8 | Crear Supabase dev/staging | Cloud + Database | Entornos inventariados, sin datos reales | Bloqueado por acceso y owner |
+| 9 | Iniciar research | UX Research | Guion, screening y participantes reclutados | Protocolo listo; 0 reclutados, aprobación pendiente |
+| 10 | Iniciar marca/confianza | Brand + Legal + Support | Brief de assets, privacidad y soporte | Pendiente |
 
 **Resultado del sprint:** gate local reabierto y medido, staging iniciado, decisiones de gobierno cerradas y research en marcha.
 
@@ -542,7 +564,7 @@ Un gate está cerrado únicamente con evidencia reproducible. Un export JavaScri
 
 **Loop diario:** aprobado localmente.
 
-**Loop semanal:** bloqueado hasta cerrar elegibilidad, métrica y ajuste.
+**Loop semanal:** elegibilidad aprobada localmente y en re-gate; el loop completo sigue bloqueado hasta integrar métrica y ajuste accionable.
 
 **Arquitectura local:** aprobada con observaciones.
 

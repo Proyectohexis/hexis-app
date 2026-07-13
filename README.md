@@ -8,6 +8,15 @@ HEXIS es una app móvil de progreso personal que convierte una identidad elegida
 
 El vertical slice del MVP está implementado y validado contra el stack oficial local de Supabase, pero el proyecto sigue en **NO-GO para producción, beta externa y datos reales**. Faltan un proyecto remoto inventariado, la matriz física completa Android/iOS, builds firmados y los gates legales, de research y release; el arranque básico vía Expo Go ya fue confirmado en un Android físico.
 
+Actualización de ejecución del 13 de julio de 2026:
+
+- la versión de la pre-alpha quedó alineada en `0.1.0`;
+- la primera Revisión ya calcula la última semana ISO cerrada en la zona del plan, comunica la primera fecha elegible y no consulta ni envía semanas fuera de vigencia;
+- una cola offline ilegible ya no se restablece silenciosamente: primero persiste un aviso diagnóstico mínimo, falla de forma conservadora si no puede guardarlo y lo muestra en Hoy y Cuenta hasta confirmación;
+- el gate local integrado pasa sintaxis en 95 archivos, dependencias declaradas y 158/158 pruebas unitarias/de contrato;
+- CI fue preparada para bloquear advisories altos/críticos, ejecutar privacidad E2E, escanear secretos de alta confianza y conservar evidencia compacta; su ejecución remota del nuevo corte debe confirmarse antes de cerrar C0;
+- los protocolos de research U0 y de retención de entradas métricas están documentados, pero siguen sin aprobación humana ni datos reales.
+
 Evidencia local del 12 de julio de 2026:
 
 - `npm ci`: correcto y reproducible desde `package-lock.json`.
@@ -21,7 +30,7 @@ Evidencia local del 12 de julio de 2026:
 - carga y render inicial confirmados en un Android físico con Expo Go 54 por LAN; validación funcional nativa aún pendiente.
 - `npm audit --omit=dev --audit-level=critical`: cero vulnerabilidades altas o críticas; permanecen avisos moderados transitivos de Expo que no deben corregirse forzando un salto de SDK.
 
-El estado detallado y los blockers están en `docs/execution/EXECUTION_STATUS_2026-07-12.md`.
+El corte histórico está en `docs/execution/EXECUTION_STATUS_2026-07-12.md`; el estado vigente de ejecución está en `docs/execution/SPRINT_0_EXECUTION_2026-07-13.md`.
 
 ## Vertical slice implementado
 
@@ -35,6 +44,7 @@ El estado detallado y los blockers están en `docs/execution/EXECUTION_STATUS_20
 - Pausa, reactivación, archivo, edición futura y descansos planificados.
 - Vigencia temporal D/D+1: Hoy conserva la versión efectiva, los slots no se liberan antes de fecha y ningún aviso one-shot sobrevive a `ends_on`.
 - Consistencia, recuperación, SEC v1 y revisión semanal conciliada.
+- Elegibilidad de Revisión por semana ISO cerrada y zona del plan, con estado previo al primer cierre.
 - Una métrica opcional con alta, edición, eliminación auditada y aviso contextual.
 - Recordatorios locales opt-in, contenido privado, reconciliación y navegación segura a Hoy.
 - Guardrails de recordatorios: horizonte one-shot de 21 días, control global, quiet hours, máximo dos por día y confirmación de zona.
@@ -52,6 +62,10 @@ El proveedor de analítica/observabilidad, validación física completa y builds
 - `docs/architecture/TECHNICAL_ARCHITECTURE.md`
 - `docs/roadmap/DEVELOPMENT_PLAN.md`
 - `docs/roadmap/ANALISIS_DE_BRECHAS_Y_PLAN_MAESTRO_2026-07-12.md`
+- `docs/execution/SPRINT_0_EXECUTION_2026-07-13.md`
+- `docs/governance/R0_DECISION_REGISTER_2026-07-13.md`
+- `docs/privacy/METRIC_ENTRY_RETENTION_DECISION_2026-07-13.md`
+- `docs/research/PROTOCOLO_RESEARCH_U0_2026-07-13.md`
 - `supabase/README.md`
 - `INFORME_COMPLETO_APLICACION_HEXIS_2026-07-12.md`
 - `INFORME_AUDITORIA_INTEGRAL_2026-07-11.md`
@@ -133,7 +147,7 @@ No apliques las migraciones al remoto hasta completar inventario, backup/restaur
 - Los eventos de evidencia son append-only; deshacer agrega una retractación.
 - La base rechaza evidencia asignada a una fecha futura y tolera como máximo cinco minutos de desfase positivo del reloj del cliente.
 - Los reintentos conservan `client_operation_id` y detectan reutilización con payload distinto.
-- La cola offline no guarda texto libre; Android backup está deshabilitado. Su cifrado completo en reposo y la prueba nativa de reinstalación siguen siendo gates.
+- La cola offline no guarda texto libre; Android backup está deshabilitado. Si el documento local es ilegible, se conserva primero un aviso mínimo sin copiar el payload y la UI informa la posible pérdida hasta confirmación. Su cifrado completo en reposo y la prueba nativa de reinstalación siguen siendo gates.
 - No se envían email, identidad, hábitos, notas ni métricas a analítica.
 - El repositorio está público y necesita una decisión formal de gobierno: el `LICENSE` MIT aún conserva el copyright heredado del template Expo.
 

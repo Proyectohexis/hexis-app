@@ -2,9 +2,11 @@
 
 **Fecha de corte:** 12 de julio de 2026
 
+**Última actualización de ejecución:** 13 de julio de 2026
+
 **Repositorio:** `Proyectohexis/hexis-app`
 
-**Commit verificado:** `79916fe300c166e476a8ded9704ce219779482f6`
+**Commit del corte original verificado:** `79916fe300c166e476a8ded9704ce219779482f6`
 
 **Plataformas objetivo:** teléfonos Android e iOS
 
@@ -20,13 +22,13 @@ El estado real del proyecto es el de una **pre-alpha técnica con un vertical sl
 
 `identidad → protocolo → práctica diaria → evidencia → revisión semanal → ajuste`
 
-La fase técnica interna fue aprobada inicialmente con **0 P0 y 0 P1 registrados en código y contratos locales**. Una auditoría posterior de Producto/UX detectó un P1 verificable en la primera revisión semanal: la UI permite intentar cerrar una semana anterior al inicio del plan y el servidor la rechaza correctamente. Por tanto, aquel resultado queda como evidencia histórica y el gate local debe reabrirse hasta corregir y probar la elegibilidad. El Gate Q1 también continúa bloqueado por backend remoto, backup/restauración, builds firmados, matriz física Android/iOS, accesibilidad nativa, observabilidad, política legal, soporte y dogfood.
+La fase técnica interna fue aprobada inicialmente con **0 P0 y 0 P1 registrados en código y contratos locales**. Una auditoría posterior de Producto/UX detectó un P1 verificable en la primera revisión semanal: la UI permitía intentar cerrar una semana anterior al inicio del plan y el servidor la rechazaba correctamente. Ese resultado inicial queda como evidencia histórica. El 13 de julio se corrigió la elegibilidad en dominio y UI y se añadieron regresiones de semana parcial, frontera de lunes y zona del plan. El gate C0 sigue pendiente hasta publicar el corte y confirmar CI remota; el Gate Q1 continúa bloqueado por backend remoto, backup/restauración, builds firmados, matriz física Android/iOS, accesibilidad nativa, observabilidad, política legal, soporte y dogfood.
 
 ### Veredicto por nivel
 
 | Nivel | Veredicto | Motivo |
 |---|---|---|
-| Código y contratos locales | Gate reabierto | Suites verdes, pero existe un P1 de elegibilidad en la primera revisión semanal |
+| Código y contratos locales | Corrección integrada; C0 pendiente | UX-01 y SYNC-01 pasan regresión local; falta confirmar el nuevo CI remoto y QA nativo |
 | Base técnica local de pre-alpha | Aprobada | Arranque Android limitado y flujos implementados; faltan pruebas físicas completas |
 | Alpha interna distribuible | Bloqueada | No existe APK/IPA firmado e instalado |
 | Beta externa | Bloqueada | Faltan research, legal, soporte, observabilidad y operación remota |
@@ -37,6 +39,8 @@ La fase técnica interna fue aprobada inicialmente con **0 P0 y 0 P1 registrados
 - Existe una aplicación Expo/React Native que genera bundles Android e iOS.
 - El loop diario está implementado en cliente, dominio y backend local; el loop semanal sigue parcial.
 - El modelo de datos, RLS, RPC, privacidad y pruebas están versionados.
+- La primera Revisión evita semanas fuera de vigencia y comunica cuándo estará disponible.
+- Una cola offline ilegible genera un aviso durable mínimo antes de restablecerse y nunca se descarta si ese aviso no puede persistirse.
 - El aislamiento usuario A/B/anónimo tiene evidencia automatizada local.
 - El arranque y render inicial fueron observados en un Android físico mediante Expo Go.
 - El commit de corte está publicado en GitHub.
@@ -494,6 +498,9 @@ Esto es positivo para privacidad, pero significa que actualmente no se recopilan
 
 ### 13.1 Resultado del corte
 
+La tabla siguiente conserva la evidencia del corte original del 12 de julio. No debe confundirse
+con una reejecución de todos los gates el día 13.
+
 | Gate | Resultado |
 |---|---:|
 | Instalación limpia `npm ci` | PASS |
@@ -511,6 +518,18 @@ Esto es positivo para privacidad, pero significa que actualmente no se recopilan
 | `npm audit --omit=dev` | 0 críticas, 0 altas, 14 moderadas, 1 baja |
 | Árbol completo de dependencias | 0 críticas, 0 altas, 16 moderadas, 1 baja |
 | Gate técnico interno Fase 9 | APROBADO en su corte; reabierto por P1 posterior de primera revisión |
+
+### 13.1.1 Actualización local del 13 de julio
+
+| Gate | Resultado |
+|---|---:|
+| Sintaxis | 95 archivos PASS |
+| Imports externos declarados | PASS |
+| Unit tests y contratos | 158/158 PASS |
+| Elegibilidad de primera Revisión | PASS en plan nuevo, semana parcial, domingo/lunes y dos zonas |
+| Recuperación de cola ilegible | PASS: aviso mínimo durable, confirmación y fallo conservador |
+| Secret scan actual | PASS local para archivos versionados de texto; no cubre historial, entropía ni binarios |
+| Workflow reforzado | Implementado; ejecución remota pendiente al redactar esta actualización |
 
 Los conteos de `npm audit` anteriores representan nodos afectados del árbol. La consulta de advisories únicos encontró cuatro avisos activos: tres moderados (`js-yaml`, `postcss`, `uuid`) y uno bajo (`@babel/core`), principalmente transitivos del toolchain Expo/Metro.
 
@@ -536,12 +555,12 @@ No existe evidencia física de iOS.
 - Workflow GitHub Actions versionado para checks móviles y base de datos.
 - La [ejecución CI #1](https://github.com/Proyectohexis/hexis-app/actions/runs/29217606569) del commit `79916fe` terminó en `Success`: `mobile-checks` en 1 min 16 s y `database-checks` en 2 min 27 s.
 - La CI ejecutó instalación exacta, sintaxis, dependencias declaradas, 142 pruebas, Expo Doctor, exports Android/iOS, auditoría crítica, Supabase desde cero y pgTAP.
-- GitHub mostró dos advertencias porque Actions v4 aún declaran Node 20 y el runner las fuerza a Node 24.
+- GitHub mostró dos advertencias en el corte original porque Actions v4 aún declaraban Node 20 y el runner las forzaba a Node 24.
 - `eas.json` exige un commit limpio antes de construir.
 - Commit de corte publicado en GitHub: `79916fe`.
 - Worktree limpio al cerrar la fase técnica.
 - El repositorio es público. La protección de `main` no pudo verificarse sin permisos administrativos.
-- La CI todavía no ejecuta `test:privacy:e2e`, no escanea secretos del historial, no conserva artefactos de export/build y solo bloquea advisories críticos; una vulnerabilidad alta futura no detendría el pipeline actual.
+- El workflow preparado el 13 de julio añade bloqueo high/critical, `test:privacy:e2e`, un escáner de secretos de alta confianza sobre la revisión actual y artefactos compactos con 14 días de retención. Debe pasar en GitHub Actions antes de considerarse evidencia. El escáner aún no cubre historial Git, entropía ni binarios, y las Actions usan tags mayores en lugar de SHA inmutable.
 
 ## 14. Preparación de release
 
@@ -549,7 +568,7 @@ No existe evidencia física de iOS.
 
 - Perfil EAS `preview` para APK interno.
 - Perfil `production` para AAB con auto-incremento.
-- Versión de aplicación `1.0.0`.
+- Versión de aplicación pre-alpha `0.1.0`.
 - Scheme `hexis`.
 - Orientación flexible.
 - UI dark-first.
@@ -611,7 +630,7 @@ No existe evidencia física de iOS.
 - Identidad/meta ausentes en Revisión.
 - Métrica activa no sustituible/desactivable desde UI.
 - Decisión semanal no prepara automáticamente el cambio.
-- La primera revisión no comunica elegibilidad y puede terminar en un rechazo esperado del servidor.
+- La elegibilidad de la primera Revisión fue corregida localmente el 13 de julio; falta QA nativo del estado y del copy.
 - No hay preferencias editables de perfil, zona o unidades.
 - Política y soporte no son accesibles antes de login.
 - Analítica deshabilitada impide medir objetivos.

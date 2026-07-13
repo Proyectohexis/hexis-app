@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, AppState, ScrollView, StyleSheet, Text, TextI
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, spacing, typography } from '../../theme';
+import QueueRecoveryNotice from '../../components/QueueRecoveryNotice';
 import { signOut } from '../../lib/auth';
 import { useAppSession } from '../../context/AppSessionContext';
 import { asyncStorageCheckInQueue } from '../../data/sync/asyncStorageCheckInQueue';
@@ -23,6 +24,10 @@ export default function AccountScreen({ navigation }) {
   const [error, setError] = useState('');
   const [pendingCount, setPendingCount] = useState(0);
   const [queueReady, setQueueReady] = useState(false);
+  const [queueRecoveryNotice, setQueueRecoveryNotice] = useState(null);
+  const [queueUnavailable, setQueueUnavailable] = useState(false);
+  const [queueRecoveryError, setQueueRecoveryError] = useState('');
+  const [acknowledgingQueueRecovery, setAcknowledgingQueueRecovery] = useState(false);
   const [privacyAction, setPrivacyAction] = useState('');
   const [privacyMessage, setPrivacyMessage] = useState('');
   const [showDeletion, setShowDeletion] = useState(false);
@@ -41,15 +46,22 @@ export default function AccountScreen({ navigation }) {
     useCallback(() => {
       let active = true;
       setQueueReady(false);
-      asyncStorageCheckInQueue.list()
-        .then(({ items }) => {
+      asyncStorageCheckInQueue.list({ userId: user?.id })
+        .then(({ items, recoveryNotice }) => {
           if (active) {
             setPendingCount(items.filter((item) => item.user_id === user?.id).length);
+            setQueueRecoveryNotice(recoveryNotice);
+            setQueueUnavailable(false);
+            setQueueRecoveryError('');
             setQueueReady(true);
           }
         })
         .catch(() => {
-          if (active) setError('No pudimos verificar los cambios offline antes de cerrar sesión.');
+          if (active) {
+            setQueueRecoveryNotice(null);
+            setQueueUnavailable(true);
+            setError('No pudimos verificar los cambios offline antes de cerrar sesión.');
+          }
         });
       return () => { active = false; };
     }, [user?.id])
@@ -89,6 +101,29 @@ export default function AccountScreen({ navigation }) {
         { text: 'Cerrar y descartar', style: 'destructive', onPress: performSignOut },
       ],
     );
+  }
+
+  async function acknowledgeQueueRecovery() {
+    if (acknowledgingQueueRecovery || !queueRecoveryNotice) return;
+    setAcknowledgingQueueRecovery(true);
+    setQueueRecoveryError('');
+    try {
+      const result = await asyncStorageCheckInQueue.acknowledgeRecoveryNotice(
+        {
+          userId: user.id,
+          generation: queueRecoveryNotice.generation,
+          detectedAt: queueRecoveryNotice.detected_at,
+        },
+      );
+      setQueueRecoveryNotice(result.recoveryNotice);
+      if (result.reason === 'notice_changed') {
+        setQueueRecoveryError('Detectamos otra recuperación local. Revisa este aviso nuevo antes de confirmarlo.');
+      }
+    } catch {
+      setQueueRecoveryError('No pudimos guardar la confirmación. El aviso seguirá visible para proteger tus cambios.');
+    } finally {
+      setAcknowledgingQueueRecovery(false);
+    }
   }
 
   async function exportAccount() {
@@ -186,6 +221,15 @@ export default function AccountScreen({ navigation }) {
           <Text accessibilityRole="header" style={styles.title}>Tu cuenta</Text>
           <Text style={styles.email}>{user?.email || ''}</Text>
         </View>
+
+        <QueueRecoveryNotice
+          notice={queueRecoveryNotice}
+          unavailable={queueUnavailable}
+          acknowledging={acknowledgingQueueRecovery}
+          error={queueRecoveryError}
+          onAcknowledge={acknowledgeQueueRecovery}
+          style={styles.queueRecoveryNotice}
+        />
 
         {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
 
@@ -331,6 +375,7 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     marginTop: spacing.xs,
   },
+  queueRecoveryNotice: { marginTop: spacing.lg },
   error: {
     color: colors.error,
     fontFamily: typography.fonts.medium,

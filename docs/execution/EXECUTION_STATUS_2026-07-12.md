@@ -1,5 +1,10 @@
 # Estado de ejecución — 12 de julio de 2026
 
+> **Corte histórico.** Una auditoría posterior reabrió el gate local por elegibilidad de la
+> primera Revisión y recuperación silenciosa de cola. Ambas correcciones fueron implementadas
+> y probadas localmente el 13 de julio; el estado vigente, incluido lo que aún no está cerrado,
+> está en `docs/execution/SPRINT_0_EXECUTION_2026-07-13.md`.
+
 ## Resultado de esta etapa
 
 Se implementó y endureció un vertical slice local de HEXIS desde cuenta hasta decisión semanal. La etapa cierra código, contratos y automatización reproducible; no autoriza usuarios reales ni despliegue remoto.
@@ -53,7 +58,12 @@ Las siete migraciones se aplicaron desde cero en PostgreSQL 17 dentro del stack 
 
 ## Gate técnico interno — Fase operativa 9
 
-**APROBADO: 0 P0 / 0 P1 abiertos en código y contratos locales.** El re-gate independiente cubrió transiciones D/D+1, reservas futuras de slots, recordatorios acotados, descansos, cambio de fecha, cambio de zona, privacidad e aislamiento. Esta aprobación no equivale al Gate Q1: siguen pendientes dispositivos físicos, builds firmados, dogfood, observabilidad aprobada y operación remota.
+**Resultado histórico, posteriormente reabierto:** este corte registró 0 P0 / 0 P1 abiertos en
+código y contratos locales. La auditoría posterior encontró UX-01 y SYNC-01, por lo que esa
+aprobación no debe usarse como estado vigente. El re-gate había cubierto transiciones D/D+1,
+reservas futuras de slots, recordatorios acotados, descansos, cambio de fecha, cambio de zona,
+privacidad e aislamiento. En cualquier caso, nunca equivalió al Gate Q1: siguen pendientes
+dispositivos físicos, builds firmados, dogfood, observabilidad aprobada y operación remota.
 
 Riesgos P2 aceptados solo para desarrollo local: si la zona cambia con la app terminada, los one-shots se cancelan en el siguiente inicio; la migración temporal `006` parchea funciones de forma fail-closed pero debe consolidarse como SQL explícito antes de producción; y falta una prueba concurrente real desde dos sesiones.
 

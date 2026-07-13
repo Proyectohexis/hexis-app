@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -27,8 +28,13 @@ import { asyncStorageCheckInQueue } from '../../data/sync/asyncStorageCheckInQue
 import { flushPendingCheckIns } from '../../data/sync/flushCheckInQueue';
 import { trackProductEvent } from '../../analytics/analytics';
 const { getDateKeyInTimeZone } = require('../../lib/date.cjs');
-const { addDays, endOfIsoWeek, startOfIsoWeek } = require('../../domain/dateKeys.cjs');
-const { calculateConsistency, evaluateSecWeek } = require('../../domain/metrics.cjs');
+const { addDays, parseDateKey } = require('../../domain/dateKeys.cjs');
+const {
+  calculateConsistency,
+  evaluateSecWeek,
+  evaluateWeeklyReviewEligibility,
+  getPreviousClosedIsoWeek,
+} = require('../../domain/metrics.cjs');
 const { aggregateLineageBreakdown } = require('./reviewBreakdown.cjs');
 
 const DECISIONS = [
@@ -61,6 +67,27 @@ function percentage(value) {
   return value == null ? '—' : `${Math.round(value * 100)}%`;
 }
 
+function formatCivilDate(dateKey, includeWeekday = false) {
+  const { timestamp } = parseDateKey(dateKey);
+  return new Intl.DateTimeFormat('es-PA', {
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+    weekday: includeWeekday ? 'long' : undefined,
+    year: 'numeric',
+  }).format(new Date(timestamp));
+}
+
+function getEligibilityExplanation(eligibility, plan) {
+  if (eligibility.eligibility_reason === 'week_before_plan') {
+    return `La semana cerrada terminó antes de que tu plan comenzara el ${formatCivilDate(plan.starts_on)}.`;
+  }
+  if (eligibility.eligibility_reason === 'week_after_plan') {
+    return 'La semana cerrada comenzó después de que terminara este plan.';
+  }
+  return 'La revisión solo se habilita después de que la semana termine en la zona horaria de tu plan.';
+}
+
 function consistencyBand(summary) {
   if (!summary?.scheduled_opportunities) return 'insufficient';
   if (summary.consistency_rate < 0.4) return 'low';
@@ -70,11 +97,20 @@ function consistencyBand(summary) {
 
 export default function WeeklyReviewScreen({ navigation }) {
   const { activePlan, user } = useAppSession();
-  const today = getDateKeyInTimeZone(new Date(), activePlan.timezone);
-  const weekStart = useMemo(() => startOfIsoWeek(addDays(today, -7)), [today]);
-  const weekEnd = useMemo(() => endOfIsoWeek(weekStart), [weekStart]);
+  const timeZone = activePlan.timezone;
+  const [today, setToday] = useState(() => getDateKeyInTimeZone(new Date(), timeZone));
+  const reviewPeriod = useMemo(() => getPreviousClosedIsoWeek(today), [today]);
+  const weekStart = reviewPeriod.week_start;
+  const weekEnd = reviewPeriod.week_end;
+  const reviewEligibility = useMemo(() => evaluateWeeklyReviewEligibility({
+    as_of_date: today,
+    plan: activePlan,
+    week_start: weekStart,
+  }), [activePlan, today, weekStart]);
   const historyStart = useMemo(() => addDays(weekEnd, -29), [weekEnd]);
+  const reviewScopeKey = `${user.id}:${activePlan.id}:${weekStart}`;
   const operationIdRef = useRef(createOperationId());
+  const reviewScopeRef = useRef(reviewScopeKey);
   const requestIdRef = useRef(0);
   const onlineRef = useRef(null);
   const confirmedTitleRef = useRef(null);
@@ -93,14 +129,53 @@ export default function WeeklyReviewScreen({ navigation }) {
   const [unsyncedCount, setUnsyncedCount] = useState(0);
   const [failedSyncCount, setFailedSyncCount] = useState(0);
 
+  useLayoutEffect(() => {
+    reviewScopeRef.current = reviewScopeKey;
+    requestIdRef.current += 1;
+    operationIdRef.current = createOperationId();
+    setSummary(null);
+    setTrajectory(null);
+    setReview(null);
+    setEvents([]);
+    setDomainPlan(null);
+    setReflection('');
+    setDecision('keep');
+    setError('');
+    setSaveError('');
+    setUnsyncedCount(0);
+    setFailedSyncCount(0);
+    setSaving(false);
+    setLoading(true);
+  }, [reviewScopeKey]);
+
+  useLayoutEffect(() => {
+    const currentDate = getDateKeyInTimeZone(new Date(), timeZone);
+    if (currentDate !== today) setToday(currentDate);
+  }, [timeZone, today]);
+
   const loadReview = useCallback(async () => {
     const requestId = ++requestIdRef.current;
     setLoading(true);
     setError('');
 
+    if (!reviewEligibility.eligible) {
+      setSummary(null);
+      setTrajectory(null);
+      setReview(null);
+      setEvents([]);
+      setDomainPlan(null);
+      setReflection('');
+      setDecision('keep');
+      setSaveError('');
+      setUnsyncedCount(0);
+      setFailedSyncCount(0);
+      setLoading(false);
+      return;
+    }
+
     try {
       await flushPendingCheckIns({ userId: user.id }).catch(() => null);
-      const queueResult = await asyncStorageCheckInQueue.list();
+      const queueResult = await asyncStorageCheckInQueue.list({ userId: user.id });
       const relevantQueue = queueResult.items.filter((item) => (
         item.user_id === user.id
         && item.local_date >= weekStart
@@ -178,16 +253,36 @@ export default function WeeklyReviewScreen({ navigation }) {
     } finally {
       if (requestId === requestIdRef.current) setLoading(false);
     }
-  }, [activePlan, historyStart, user.id, weekEnd, weekStart]);
+  }, [activePlan, historyStart, reviewEligibility.eligible, user.id, weekEnd, weekStart]);
 
   useFocusEffect(
     useCallback(() => {
-      loadReview();
+      const currentDate = getDateKeyInTimeZone(new Date(), timeZone);
+      if (currentDate === today) {
+        loadReview();
+      } else {
+        setToday(currentDate);
+      }
       return () => {
         requestIdRef.current += 1;
       };
-    }, [loadReview, reloadKey])
+    }, [loadReview, reloadKey, timeZone, today])
   );
+
+  useEffect(() => {
+    const refreshCivilDate = () => {
+      const currentDate = getDateKeyInTimeZone(new Date(), timeZone);
+      if (currentDate !== today) setToday(currentDate);
+    };
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refreshCivilDate();
+    });
+    const timer = setInterval(refreshCivilDate, 60_000);
+    return () => {
+      subscription.remove();
+      clearInterval(timer);
+    };
+  }, [timeZone, today]);
 
   useEffect(() => NetInfo.addEventListener((state) => {
     const online = state.isConnected === true && state.isInternetReachable !== false;
@@ -203,6 +298,22 @@ export default function WeeklyReviewScreen({ navigation }) {
 
   async function saveReview() {
     if (saving || review) return;
+    const currentDate = getDateKeyInTimeZone(new Date(), timeZone);
+    const currentPeriod = getPreviousClosedIsoWeek(currentDate);
+    const currentEligibility = evaluateWeeklyReviewEligibility({
+      as_of_date: currentDate,
+      plan: activePlan,
+      week_start: currentPeriod.week_start,
+    });
+    if (currentPeriod.week_start !== weekStart) {
+      setSaveError('La semana cambió. Actualizamos la Revisión antes de guardar.');
+      setToday(currentDate);
+      return;
+    }
+    if (!currentEligibility.eligible || !reviewEligibility.eligible) {
+      setSaveError('Esta semana no coincide con la vigencia del plan y no puede cerrarse.');
+      return;
+    }
     if (unsyncedCount > 0) {
       setSaveError('Sincroniza o resuelve la evidencia pendiente de esta semana antes de cerrarla.');
       return;
@@ -218,6 +329,7 @@ export default function WeeklyReviewScreen({ navigation }) {
 
     setSaving(true);
     setSaveError('');
+    const savingScopeKey = reviewScopeKey;
     try {
       const result = await completeWeeklyReview({
         planId: activePlan.id,
@@ -228,15 +340,17 @@ export default function WeeklyReviewScreen({ navigation }) {
       });
       if (result.error) throw result.error;
       if (!result.data?.review) throw new Error('El servidor no devolvió la revisión confirmada.');
+      if (reviewScopeRef.current !== savingScopeKey) return;
       setReview(result.data.review);
       void trackProductEvent('weekly_review_completed', {
         decision,
         consistency_band: consistencyBand(summary),
       });
     } catch (reviewError) {
+      if (reviewScopeRef.current !== savingScopeKey) return;
       setSaveError(getReviewRepositoryErrorMessage(reviewError));
     } finally {
-      setSaving(false);
+      if (reviewScopeRef.current === savingScopeKey) setSaving(false);
     }
   }
 
@@ -261,7 +375,19 @@ export default function WeeklyReviewScreen({ navigation }) {
           <View style={styles.header}>
             <Text style={styles.eyebrow}>REVISIÓN SEMANAL</Text>
             <Text accessibilityRole="header" style={styles.title}>Decide con evidencia.</Text>
-            <Text style={styles.subtitle}>{weekStart} → {weekEnd}</Text>
+            <Text style={styles.subtitle}>
+              Semana del {formatCivilDate(weekStart)} al {formatCivilDate(weekEnd)}
+            </Text>
+            <Text style={styles.periodMeta}>Zona horaria del plan: {activePlan.timezone}</Text>
+            <View
+              accessible
+              accessibilityLabel={reviewEligibility.eligible ? 'Semana cerrada disponible para revisar' : 'Semana cerrada todavía no elegible'}
+              style={[styles.periodStatus, reviewEligibility.eligible && styles.periodStatusEligible]}
+            >
+              <Text style={[styles.periodStatusText, reviewEligibility.eligible && styles.periodStatusTextEligible]}>
+                {review ? 'Revisión completada' : reviewEligibility.eligible ? 'Semana cerrada · Lista para revisar' : 'Semana cerrada · Aún no elegible'}
+              </Text>
+            </View>
           </View>
 
           {loading ? (
@@ -279,7 +405,19 @@ export default function WeeklyReviewScreen({ navigation }) {
             </View>
           ) : null}
 
-          {!loading && !error && summary ? (
+          {!loading && !error && !reviewEligibility.eligible ? (
+            <View style={styles.eligibilityCard}>
+              <Text style={styles.cardLabel}>PRIMER CIERRE</Text>
+              <Text accessibilityRole="header" style={styles.eligibilityTitle}>Tu primera revisión todavía no está disponible.</Text>
+              <Text style={styles.eligibilityCopy}>{getEligibilityExplanation(reviewEligibility, activePlan)}</Text>
+              <Text style={styles.eligibilityDate}>
+                Podrás revisar tu primera semana el {formatCivilDate(reviewEligibility.first_review_available_on, true)}.
+              </Text>
+              <Text style={styles.eligibilityCopy}>Mientras tanto, registra tus acciones con normalidad. No necesitas cerrar una semana anterior al inicio del plan.</Text>
+            </View>
+          ) : null}
+
+          {!loading && !error && reviewEligibility.eligible && summary ? (
             <>
               {unsyncedCount ? (
                 <View style={styles.syncCard} accessibilityRole="alert">
@@ -444,10 +582,19 @@ const styles = StyleSheet.create({
   eyebrow: { color: colors.accent.primary, fontFamily: typography.fonts.semibold, fontSize: typography.sizes.xs, letterSpacing: 2, marginBottom: spacing.sm },
   title: { color: colors.text.primary, fontFamily: typography.fonts.bold, fontSize: typography.sizes.xxl, lineHeight: typography.lineHeights.xxl },
   subtitle: { color: colors.text.secondary, fontFamily: typography.fonts.medium, fontSize: typography.sizes.sm, marginTop: spacing.sm },
+  periodMeta: { color: colors.text.tertiary, fontFamily: typography.fonts.regular, fontSize: typography.sizes.xs, marginTop: spacing.xs },
+  periodStatus: { alignSelf: 'flex-start', borderWidth: 1, borderColor: colors.border.default, borderRadius: 999, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs, marginTop: spacing.md },
+  periodStatusEligible: { borderColor: colors.accent.primary, backgroundColor: colors.accent.muted },
+  periodStatusText: { color: colors.text.secondary, fontFamily: typography.fonts.semibold, fontSize: typography.sizes.xs },
+  periodStatusTextEligible: { color: colors.accent.light },
   centerState: { minHeight: 260, alignItems: 'center', justifyContent: 'center' },
   error: { color: colors.error, fontFamily: typography.fonts.medium, fontSize: typography.sizes.sm, lineHeight: typography.lineHeights.sm },
   retryButton: { minHeight: 48, justifyContent: 'center', marginTop: spacing.sm },
   retryText: { color: colors.text.primary, fontFamily: typography.fonts.semibold, fontSize: typography.sizes.sm },
+  eligibilityCard: { borderWidth: 1, borderColor: colors.border.default, borderRadius: 18, backgroundColor: colors.background.card, padding: spacing.lg },
+  eligibilityTitle: { color: colors.text.primary, fontFamily: typography.fonts.semibold, fontSize: typography.sizes.lg, lineHeight: typography.lineHeights.lg, marginTop: spacing.sm },
+  eligibilityCopy: { color: colors.text.secondary, fontFamily: typography.fonts.regular, fontSize: typography.sizes.sm, lineHeight: typography.lineHeights.sm, marginTop: spacing.sm },
+  eligibilityDate: { color: colors.accent.light, fontFamily: typography.fonts.semibold, fontSize: typography.sizes.md, lineHeight: typography.lineHeights.md, marginTop: spacing.md },
   syncCard: { borderWidth: 1, borderColor: colors.warning, borderRadius: 14, padding: spacing.md, marginBottom: spacing.md },
   syncTitle: { color: colors.warning, fontFamily: typography.fonts.semibold, fontSize: typography.sizes.sm },
   syncCopy: { color: colors.text.secondary, fontFamily: typography.fonts.regular, fontSize: typography.sizes.sm, lineHeight: typography.lineHeights.sm, marginTop: spacing.xs },

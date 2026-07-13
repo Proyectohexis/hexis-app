@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import NetInfo from '@react-native-community/netinfo';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { colors, spacing, typography } from '../../theme';
+import QueueRecoveryNotice from '../../components/QueueRecoveryNotice';
 import { useAppSession } from '../../context/AppSessionContext';
 import {
   getPracticeRepositoryErrorMessage,
@@ -83,6 +84,10 @@ export default function TodayScreen() {
   const [error, setError] = useState('');
   const [pendingById, setPendingById] = useState({});
   const [actionErrors, setActionErrors] = useState({});
+  const [queueRecoveryNotice, setQueueRecoveryNotice] = useState(null);
+  const [queueUnavailable, setQueueUnavailable] = useState(false);
+  const [queueRecoveryError, setQueueRecoveryError] = useState('');
+  const [acknowledgingQueueRecovery, setAcknowledgingQueueRecovery] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const requestIdRef = useRef(0);
   const operationByHabitRef = useRef({});
@@ -95,14 +100,47 @@ export default function TodayScreen() {
     setError('');
 
     try {
+      let queue;
+      let queueReadable = true;
+      let knownRecoveryNotice = null;
+      try {
+        queue = await asyncStorageCheckInQueue.list({ userId: user.id });
+        if (requestId !== requestIdRef.current) return;
+        knownRecoveryNotice = queue.recoveryNotice;
+        setQueueUnavailable(false);
+        setQueueRecoveryError('');
+      } catch {
+        if (requestId !== requestIdRef.current) return;
+        queue = { items: [] };
+        queueReadable = false;
+        setQueueRecoveryNotice(null);
+        setQueueUnavailable(true);
+      }
       await flushPendingCheckIns({ userId: user.id }).catch(() => null);
+      if (queueReadable) {
+        try {
+          queue = await asyncStorageCheckInQueue.list({ userId: user.id });
+          if (requestId !== requestIdRef.current) return;
+          setQueueRecoveryNotice(queue.recoveryNotice);
+        } catch {
+          if (requestId !== requestIdRef.current) return;
+          queue = { items: [] };
+          if (knownRecoveryNotice) {
+            setQueueRecoveryNotice(knownRecoveryNotice);
+            setQueueUnavailable(false);
+            setQueueRecoveryError('No pudimos volver a verificar la cola después de recuperarla. El aviso se conserva.');
+          } else {
+            setQueueRecoveryNotice(null);
+            setQueueUnavailable(true);
+          }
+        }
+      }
       const result = await getTodayPractice({
         userId: user.id,
         planId: activePlan.id,
         localDate: nextLocalDate,
       });
       if (result.error) throw result.error;
-      const queue = await asyncStorageCheckInQueue.list().catch(() => ({ items: [] }));
       if (requestId !== requestIdRef.current) return;
       setLocalDate(nextLocalDate);
       setHabits(applyQueuedOperations(result.data, queue.items, user.id, nextLocalDate));
@@ -218,7 +256,7 @@ export default function TodayScreen() {
     } catch (actionError) {
       if (isRetryableTransportError(actionError)) {
         try {
-          await asyncStorageCheckInQueue.enqueue({
+          const queued = await asyncStorageCheckInQueue.enqueue({
             operation_id: operation.id,
             user_id: user.id,
             habit_id: habit.id,
@@ -228,6 +266,10 @@ export default function TodayScreen() {
             completion_level: intendedCompleted ? completionLevel : null,
             occurred_at: operation.occurredAt,
           });
+          if (queued.recoveryNotice) {
+            setQueueRecoveryNotice(queued.recoveryNotice);
+            setQueueUnavailable(false);
+          }
           setHabits((current) => current.map((item) => item.id === habit.id
             ? {
                 ...item,
@@ -298,6 +340,29 @@ export default function TodayScreen() {
     }
   }
 
+  async function acknowledgeQueueRecovery() {
+    if (acknowledgingQueueRecovery || !queueRecoveryNotice) return;
+    setAcknowledgingQueueRecovery(true);
+    setQueueRecoveryError('');
+    try {
+      const result = await asyncStorageCheckInQueue.acknowledgeRecoveryNotice(
+        {
+          userId: user.id,
+          generation: queueRecoveryNotice.generation,
+          detectedAt: queueRecoveryNotice.detected_at,
+        },
+      );
+      setQueueRecoveryNotice(result.recoveryNotice);
+      if (result.reason === 'notice_changed') {
+        setQueueRecoveryError('Detectamos otra recuperación local. Revisa este aviso nuevo antes de confirmarlo.');
+      }
+    } catch {
+      setQueueRecoveryError('No pudimos guardar la confirmación. El aviso seguirá visible para proteger tus cambios.');
+    } finally {
+      setAcknowledgingQueueRecovery(false);
+    }
+  }
+
   const completedCount = habits.filter((habit) => habit.completed).length;
   const completion = habits.length ? Math.round((completedCount / habits.length) * 100) : 0;
   const pendingOfflineCount = habits.filter((habit) => habit.sync_status === 'pending_offline').length;
@@ -311,6 +376,14 @@ export default function TodayScreen() {
           <Text accessibilityRole="header" style={styles.title}>Evidencia de hoy</Text>
           <Text style={styles.identity}>{activePlan.identity_statement}</Text>
         </View>
+
+        <QueueRecoveryNotice
+          notice={queueRecoveryNotice}
+          unavailable={queueUnavailable}
+          acknowledging={acknowledgingQueueRecovery}
+          error={queueRecoveryError}
+          onAcknowledge={acknowledgeQueueRecovery}
+        />
 
         {loading ? (
           <View style={styles.centerState} accessible accessibilityLabel="Cargando compromisos de hoy">

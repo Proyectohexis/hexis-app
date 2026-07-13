@@ -1,6 +1,7 @@
 'use strict';
 
 const {
+  addDays,
   assertDateRange,
   endOfIsoWeek,
   enumerateDateKeys,
@@ -181,6 +182,64 @@ function hasWeeklyReview(reviews, planId, weekStart) {
   );
 }
 
+function getPreviousClosedIsoWeek(asOfDate) {
+  parseDateKey(asOfDate, 'as_of_date');
+  const weekStart = addDays(startOfIsoWeek(asOfDate), -7);
+  const weekEnd = endOfIsoWeek(weekStart);
+
+  return {
+    available_on: addDays(weekEnd, 1),
+    week_end: weekEnd,
+    week_start: weekStart,
+  };
+}
+
+function evaluateWeeklyReviewEligibility({
+  plan,
+  week_start: weekStart,
+  as_of_date: asOfDate,
+}) {
+  if (!plan || typeof plan !== 'object' || Array.isArray(plan)) {
+    throw new TypeError('plan debe ser un objeto.');
+  }
+
+  parseDateKey(plan.starts_on, 'plan.starts_on');
+  if (plan.ends_on != null) {
+    parseDateKey(plan.ends_on, 'plan.ends_on');
+    if (plan.ends_on < plan.starts_on) {
+      throw new RangeError('plan.ends_on no puede ser anterior a plan.starts_on.');
+    }
+  }
+  parseDateKey(weekStart, 'week_start');
+  parseDateKey(asOfDate, 'as_of_date');
+  if (startOfIsoWeek(weekStart) !== weekStart) {
+    throw new RangeError('week_start debe ser lunes.');
+  }
+
+  const weekEnd = endOfIsoWeek(weekStart);
+  const weekClosed = weekEnd < asOfDate;
+  const beginsBeforePlan = weekEnd < plan.starts_on;
+  const beginsAfterPlan = plan.ends_on != null && weekStart > plan.ends_on;
+  const overlapsPlan = !beginsBeforePlan && !beginsAfterPlan;
+  const eligible = weekClosed && overlapsPlan;
+
+  return {
+    eligible,
+    eligibility_reason: !weekClosed
+      ? 'week_not_closed'
+      : beginsBeforePlan
+        ? 'week_before_plan'
+        : beginsAfterPlan
+          ? 'week_after_plan'
+          : 'eligible',
+    first_review_available_on: addDays(endOfIsoWeek(plan.starts_on), 1),
+    overlaps_plan: overlapsPlan,
+    week_closed: weekClosed,
+    week_end: weekEnd,
+    week_start: weekStart,
+  };
+}
+
 function evaluateSecWeek({
   user_id: userId,
   plan,
@@ -287,6 +346,8 @@ module.exports = {
   SEC_METRIC_VERSION,
   calculateConsistency,
   calculateSecRate,
+  evaluateWeeklyReviewEligibility,
   evaluateSecWeek,
+  getPreviousClosedIsoWeek,
   listScheduledOpportunities,
 };
