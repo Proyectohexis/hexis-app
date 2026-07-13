@@ -26,11 +26,11 @@ export default function QueueRecoveryNotice({
           {unavailable
             ? 'HEXIS no puede comprobar ahora el estado del registro local. Evita cerrar sesión o eliminar la app y vuelve a intentarlo antes de depender de cambios sin conexión.'
             : repairedDiagnostic
-              ? 'HEXIS reparó un aviso local que no podía leer. La cola actual no se descartó por esta reparación, pero no podemos confirmar si ya se había revisado una recuperación anterior. Comprueba lo que aparece en la app antes de confirmar.'
+              ? 'HEXIS reparó un aviso local que no podía leer. Los cambios que ahora están pendientes no se descartaron, pero no podemos confirmar si ya habías revisado un aviso anterior. Comprueba lo que aparece en la app antes de confirmar.'
               : 'HEXIS restableció el registro local de cambios pendientes de este dispositivo porque no pudo leerlo. Es posible que alguna evidencia aún no sincronizada falte. Revisa lo que aparece en la app antes de confirmar este aviso.'}
         </Text>
         <Text style={styles.reference}>
-          Referencia de diagnóstico: {notice?.diagnostic_code || 'SYNC-Q00'}
+          Código para soporte: {notice?.diagnostic_code || 'SYNC-Q00'}
         </Text>
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </View>

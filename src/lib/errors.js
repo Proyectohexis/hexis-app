@@ -13,5 +13,5 @@ export function getAuthErrorMessage(error) {
     weak_password: 'Usa una contraseña de al menos 12 caracteres y evita solo espacios.',
   };
 
-  return messages[code] || 'No pudimos completar la operación. Revisa tu conexión e inténtalo de nuevo.';
+  return messages[code] || 'No pudimos completar esta acción. Revisa tu conexión e inténtalo de nuevo.';
 }

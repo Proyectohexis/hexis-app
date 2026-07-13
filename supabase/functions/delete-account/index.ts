@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2.106.2';
+import { createClient } from '@supabase/supabase-js';
 
 const DELETE_CONFIRMATION = 'ELIMINAR HEXIS';
 const MAX_REQUEST_BYTES = 4096;

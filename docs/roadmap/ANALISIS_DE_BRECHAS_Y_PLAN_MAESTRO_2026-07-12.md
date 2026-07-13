@@ -36,6 +36,9 @@ El primer corte R0/R1 ya produjo cambios verificables, sin adelantar gates exter
 - SYNC-01 implementado con aviso durable mínimo, recuperación conservadora, confirmación
   protegida contra concurrencia y reconocimiento aislado por cuenta/generación;
 - CI-01 endurecido para advisories high/critical, privacidad E2E, secret scan y artefactos;
+- copy visible depurado y protegido con una regresión editorial AST de alcance parcial;
+- typecheck incremental verde sobre 20 módulos del núcleo y Deno check/lint añadidos para la
+  Edge Function; la deuda global permanece visible con 53 diagnósticos en 10 archivos;
 - PRV-01 documentado sin cambiar la base antes de una decisión Legal/DPO;
 - protocolo U0 listo para aprobación, con 0 participantes reclutados y 0 sesiones ejecutadas;
 - registro G0 creado; propiedad, licencia, visibilidad, IDs, cuentas y owners siguen abiertos.
@@ -77,7 +80,7 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 | Marca | Incompleta | Sistema dark-first consistente, pero assets de Expo siguen provisionales |
 | Arquitectura | Fuerte localmente | Capas claras, dominio testeable y servidor como fuente de verdad |
 | Seguridad/privacidad | Fuerte localmente | Buenas fronteras; operación real, retención y antiabuso siguen pendientes |
-| QA automatizado | Fuerte para pre-alpha | El corte R1 pasa 158/158 tests locales y CI remoto móvil/DB/privacidad; faltan E2E móvil real y QA nativo |
+| QA automatizado | Fuerte para pre-alpha | El corte R1 pasa 164/164 tests locales; el CI remoto del bloque anterior está verde y el nuevo gate TypeScript/Deno espera revalidación; faltan E2E móvil real y QA nativo |
 | Release | Inmaduro | Sin IDs nativos, proyecto EAS, builds firmados ni matriz iOS/Android |
 | Operación | No preparada | Sin observabilidad activa, soporte, on-call, SLAs o restore probado |
 | Evidencia de valor | Ausente | Sin entrevistas, usabilidad, dogfood o métricas de cohortes |
@@ -117,11 +120,12 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 
 ### 4.4 Calidad
 
-- 142 pruebas JS/contrato y 68 pgTAP documentadas.
+- 164 pruebas JS/contrato actuales y 68 pgTAP documentadas.
 - E2E adverso local de privacidad.
 - Bundles Android/iOS y Expo Doctor verdes.
 - Dos ejecuciones CI remotas verdes para los commits de aplicación e informe: [CI #1](https://github.com/Proyectohexis/hexis-app/actions/runs/29217606569) y [CI #2](https://github.com/Proyectohexis/hexis-app/actions/runs/29218095210).
-- El servidor rechaza semanas de revisión inválidas, aunque la UI todavía permita intentarlas.
+- Cliente y servidor rechazan semanas de revisión fuera de vigencia; la regresión cubre plan nuevo,
+  semana parcial, frontera de lunes y zona del plan.
 
 ## 5. Qué está mal o incompleto
 
@@ -144,7 +148,8 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 5. Con fuente grande se ocultan etiquetas del tab bar; puede reducir comprensión visual.
 6. Una evidencia mínima requiere retractar y registrar de nuevo para elevarla a completa.
 7. Cuenta no permite gestionar zona, locale o unidades.
-8. Jerga como RLS, staging, Supabase y backend aparece en estados orientados al usuario.
+8. La jerga de implementación visible fue retirada y tiene una regresión editorial; falta validar
+   comprensión, truncado y lector de pantalla en dispositivos reales.
 9. Privacidad, soporte y elegibilidad 18+ no están visibles antes del registro.
 10. No hay ayuda, FAQ o canal de feedback dentro de la app.
 11. El copy está hardcoded en español; i18n puede esperar, pero la arquitectura debe evitar más deuda.
@@ -163,8 +168,10 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 10. El custom scheme de recuperación debe complementarse con Universal Links/App Links.
 11. AsyncStorage no cifra íntegramente la cola; la minimización es buena, pero requiere threat model y aceptación.
 12. La recuperación silenciosa y el aislamiento multi-cuenta de cola fueron corregidos localmente el 13 de julio; quedan QA nativo y prueba de interacción real.
-13. El soft delete de métricas conserva contenido; falta decisión formal de retención y explicación al usuario.
-14. No hay lint, typecheck ni umbral de cobertura.
+13. El soft delete de métricas conserva contenido; la UI pre-alpha ahora lo llama “Ocultar” y lo
+    explica, pero falta una decisión formal de retención y borrado definitivo.
+14. Existe typecheck incremental del núcleo y check/lint Deno; el chequeo global aún reporta 53
+    diagnósticos en 10 archivos y sigue faltando lint móvil y un umbral de cobertura.
 15. Pantallas grandes como Disciplina, PlanSetup y AppNavigator aumentan el costo de mantenimiento.
 16. Falta SBOM, actualización automatizada y provenance de artefactos.
 
@@ -247,7 +254,7 @@ No se enviarán identidad, hábito, nota, reflexión, email ni valor métrico a 
 | GOV-01 | P0 | Licencia, copyright y visibilidad aprobados | Legal + Dirección | `LICENSE` y política del repo corresponden al propietario real |
 | GOV-02 | P0 | Owners, accesos e IDs permanentes | App Studio Director | Supabase/EAS/Apple/Google inventariados; IDs aprobados |
 | UX-01 | P0 | Elegibilidad de primera revisión | Product + Mobile | Muestra primera fecha; nunca envía semana inválida; tests de zona/límite verdes |
-| UX-02 | P0 | Revisión contextual y accionable | Product + UX + Backend | Identidad/meta visibles; compromiso y ajuste generan borrador D+1 |
+| UX-02 | P0 | [Revisión contextual y accionable](../product/UX_02_REVISION_CONTEXTUAL_ACCIONABLE_HANDOFF_2026-07-13.md) | Product + UX + Backend | Identidad/meta visibles; compromiso y ajuste generan borrador D+1 |
 | PRV-01 | P0 | Semántica de borrado/retención métrica | Privacy + Legal + Data | Matriz dato-finalidad-retención-borrado aprobada y copy coherente |
 | DATA-01 | P0 | Backend dev/staging recuperable | Cloud + Database | Deploy desde cero, RLS, backup y restore con evidencia |
 | AUTH-01 | P0 | Auth endurecido | Auth + AppSec | Matriz adversa de signup/login/reset/antiabuso aprobada |
@@ -498,7 +505,7 @@ Camino crítico: gobierno → integridad local/backend/producto → builds firma
 |---:|---|---|---|---|
 | 1 | Aprobar licencia, visibilidad, IDs y owners | Dirección + Legal | Registro de decisiones firmado | Registro preparado; decisiones del propietario pendientes |
 | 2 | Corregir elegibilidad de Revisión | Product + Mobile | Tests de plan nuevo/semana/zona verdes | Implementado y en re-gate |
-| 3 | Diseñar Revisión accionable | Product + UX | Prototipo y criterios listos para test | Pendiente; no confundir elegibilidad con cierre del loop |
+| 3 | Diseñar Revisión accionable | Product + UX | Prototipo y criterios listos para test | Handoff textual UX-02 listo; prototipo navegable y validación U0 pendientes |
 | 4 | Resolver retención de métricas | Privacy + Data | Matriz de retención aprobada | Opciones y recomendación listas; aprobación Legal/DPO pendiente |
 | 5 | Diseñar recuperación de cola corrupta | Offline + UX | Contrato y tests de no pérdida silenciosa | Implementado y re-gate local verde; QA nativo pendiente |
 | 6 | Consolidar migración `006` | Database | Fresh install/upgrade equivalentes | Diferido hasta inventariar remoto para evitar drift |

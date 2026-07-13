@@ -18,6 +18,9 @@ Cerrar el P1 de primera Revisión, eliminar pérdida silenciosa ante cola corrup
 | GOV-02 | IDs, cuentas y owners | Bloqueado por decisiones externas | Registro GOV-D04 a GOV-D07 |
 | VER-01 | Versionado pre-alpha | Implementado y validado localmente | `app.json`, `package.json` y lock en `0.1.0` |
 | UX-01 | Elegibilidad de primera Revisión | Implementado y cubierto por regresión local | UI no consulta ni envía una semana fuera de vigencia; pruebas de semana parcial, lunes y zona |
+| UX-02 | Revisión contextual y accionable | Handoff de baja fidelidad listo; sin integración productiva ni evidencia U0 | `docs/product/UX_02_REVISION_CONTEXTUAL_ACCIONABLE_HANDOFF_2026-07-13.md` |
+| COPY-01 | Copy externo sin jerga de implementación | Implementado con cobertura estática parcial; QA nativo pendiente | Detector AST sobre copy directo y traductores registrados; no sustituye revisión de contenido dinámico o dispositivo |
+| ENG-01 | Typecheck/lint incremental | Parcial y medido | 20 módulos del núcleo pasan; Deno check/lint pasa con config/lock junto a la función; deuda global: 53 diagnósticos en 10 archivos |
 | SYNC-01 | Cola corrupta no silenciosa | Implementado y cubierto por regresión local | Aviso durable mínimo en Hoy/Cuenta, confirmación explícita y recuperación fail-closed |
 | PRV-01 | Retención de métricas | Diseño documentado; decisión bloqueada | `docs/privacy/METRIC_ENTRY_RETENTION_DECISION_2026-07-13.md`; no se cambió la DB sin Legal/DPO |
 | CI-01 | CI high/critical, privacidad y secretos | Implementado y PASS remoto | [GitHub Actions #29287951627](https://github.com/Proyectohexis/hexis-app/actions/runs/29287951627) |
@@ -29,9 +32,13 @@ Cerrar el P1 de primera Revisión, eliminar pérdida silenciosa ante cola corrup
 
 | Control | Resultado |
 |---|---:|
-| Sintaxis JavaScript | 95 archivos válidos |
+| Sintaxis JavaScript | 97 archivos válidos |
 | Dependencias declaradas | PASS |
-| Unit tests y contratos | 158/158 PASS |
+| Typecheck incremental del núcleo | 20 módulos, PASS |
+| Typecheck global de deuda | 53 diagnósticos en 10 archivos; FAIL conocido, fuera del gate incremental |
+| Deno 2.8.1 check/lint de Edge Function | PASS con lock congelado |
+| Unit tests y contratos | 164/164 PASS |
+| Contrato editorial parcial y transparencia de borrado lógico | PASS |
 | Secret scan de archivos versionados | PASS local; el alcance no incluye historial Git, entropía ni binarios |
 | Revisión cruzada de UX-01 y SYNC-01 | PASS: 0 P0/P1 identificados en el alcance local |
 | GitHub Actions del commit `d22ab54` | PASS: `mobile-checks` y `database-checks` |
@@ -45,6 +52,8 @@ debe repetir esos gates.
 
 - Las pruebas de rollover de Revisión y de aviso de cola validan contrato/dominio, pero no
   sustituyen una prueba real de hooks, RPC espiado, lector de pantalla ni binario nativo.
+- La regresión editorial inspecciona copy estático directo y helpers registrados; no sigue todo el
+  flujo de datos dinámico ni sustituye revisión humana, truncado o lector de pantalla.
 - El marcador de recuperación conserva hasta 32 `user_id` opacos por generación en
   AsyncStorage, sin contenido de evidencia y sin cifrado integral. Al superar el límite se vuelve
   a mostrar el aviso; nunca se silencia para otra cuenta.
@@ -87,7 +96,8 @@ como decisiones o dependencias explícitas; no se disfrazan como trabajo cerrado
 ## Handoff del corte
 
 - **Dirección/Legal:** resolver GOV-D01 a GOV-D07 y elegir la política PRV-01.
-- **DevOps/QA:** conservar los artefactos del run y llevar los checks a branch protection cuando exista acceso administrador.
+- **DevOps/QA:** validar en CI remoto los nuevos gates TypeScript/Deno, conservar artefactos y llevar los checks a branch protection cuando exista acceso administrador.
 - **Cloud/Database:** inventariar Supabase antes de tocar migraciones aplicadas.
 - **Product/UX/Privacy:** aprobar el protocolo U0 antes de reclutar.
+- **Interaction Design/UX Research:** convertir UX-02 en prototipo navegable, ejecutar piloto y validar T4; no implementar antes del veredicto U0.
 - **Mobile QA:** validar los nuevos estados de Revisión y cola en binarios/dispositivos reales.

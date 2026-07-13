@@ -215,8 +215,11 @@ export default function PlanSetupScreen({ user, onPlanCreated }) {
           </View>
 
           <View style={styles.developmentNotice}>
-            <Text style={styles.noticeTitle}>Entorno de desarrollo</Text>
-            <Text style={styles.noticeCopy}>Usa contenido de prueba hasta que las migraciones y el aislamiento RLS pasen en staging.</Text>
+            <Text style={styles.noticeTitle}>Versión de prueba</Text>
+            <Text style={styles.noticeCopy}>
+              Usa contenido creado para probar HEXIS mientras terminamos de verificar la protección
+              y eliminación de datos.
+            </Text>
           </View>
 
           {saveError ? <Text accessibilityRole="alert" style={styles.error}>{saveError}</Text> : null}

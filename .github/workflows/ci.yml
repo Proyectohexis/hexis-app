@@ -61,6 +61,9 @@ jobs:
           NODE
           exit "$audit_exit"
 
+      - name: Type-check client core
+        run: npm run typecheck:client-core
+
       - name: Parse source
         run: npm run verify:syntax
 
@@ -118,6 +121,17 @@ jobs:
         uses: supabase/setup-cli@v3
         with:
           version: 2.84.2
+
+      - name: Deno 2.8.1
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.8.1
+          cache: true
+
+      - name: Check and lint Edge Functions
+        run: |
+          npm run typecheck:edge
+          npm run lint:edge
 
       - name: Start isolated Supabase stack
         run: supabase start

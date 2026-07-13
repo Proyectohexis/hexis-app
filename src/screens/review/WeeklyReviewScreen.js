@@ -381,11 +381,11 @@ export default function WeeklyReviewScreen({ navigation }) {
             <Text style={styles.periodMeta}>Zona horaria del plan: {activePlan.timezone}</Text>
             <View
               accessible
-              accessibilityLabel={reviewEligibility.eligible ? 'Semana cerrada disponible para revisar' : 'Semana cerrada todavía no elegible'}
+              accessibilityLabel={reviewEligibility.eligible ? 'Semana cerrada disponible para revisar' : 'Semana cerrada todavía no disponible'}
               style={[styles.periodStatus, reviewEligibility.eligible && styles.periodStatusEligible]}
             >
               <Text style={[styles.periodStatusText, reviewEligibility.eligible && styles.periodStatusTextEligible]}>
-                {review ? 'Revisión completada' : reviewEligibility.eligible ? 'Semana cerrada · Lista para revisar' : 'Semana cerrada · Aún no elegible'}
+                {review ? 'Revisión completada' : reviewEligibility.eligible ? 'Semana cerrada · Lista para revisar' : 'Semana cerrada · Aún no disponible'}
               </Text>
             </View>
           </View>
@@ -421,10 +421,10 @@ export default function WeeklyReviewScreen({ navigation }) {
             <>
               {unsyncedCount ? (
                 <View style={styles.syncCard} accessibilityRole="alert">
-                  <Text style={styles.syncTitle}>Semana aún no conciliada</Text>
+                  <Text style={styles.syncTitle}>Semana con cambios pendientes</Text>
                   <Text style={styles.syncCopy}>
-                    Hay {unsyncedCount} {unsyncedCount === 1 ? 'operación local' : 'operaciones locales'} sin confirmar
-                    {failedSyncCount ? `; ${failedSyncCount} requieren intervención` : ''}. La revisión no se cerrará con un resumen incompleto.
+                    Hay {unsyncedCount} {unsyncedCount === 1 ? 'cambio guardado en este dispositivo' : 'cambios guardados en este dispositivo'} sin confirmar
+                    {failedSyncCount ? `; ${failedSyncCount} requieren atención` : ''}. Para evitar un resumen incompleto, termina esos cambios antes de cerrar la revisión.
                   </Text>
                 </View>
               ) : null}

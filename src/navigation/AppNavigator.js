@@ -378,8 +378,8 @@ export default function AppNavigator() {
   if (supabaseConfigurationError) {
     return (
       <StatusScreen
-        title="Configuración pendiente"
-        message={`${supabaseConfigurationError} Copia .env.example a .env, completa los valores y reinicia Expo.`}
+        title="Aplicación no disponible"
+        message="Esta instalación todavía no está preparada para conectarse. Usa una versión preparada de HEXIS o inténtalo más tarde."
       />
     );
   }
@@ -457,7 +457,7 @@ export default function AppNavigator() {
   if (session && planStatus === 'error') {
     return (
       <StatusScreen
-        title="Backend pendiente"
+        title="No pudimos cargar tu plan"
         message={planError}
         onRetry={() => setPlanRetryCount((value) => value + 1)}
         onSecondary={() => signOut()}

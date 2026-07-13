@@ -26,14 +26,14 @@ export function isTargetSchemaUnavailable(error) {
 
 export function getPlanRepositoryErrorMessage(error) {
   if (isTargetSchemaUnavailable(error)) {
-    return 'El backend de desarrollo todavía no tiene el esquema objetivo de HEXIS. Aplica y valida las migraciones en staging antes de continuar.';
+    return 'Los planes no están disponibles en esta instalación de HEXIS. Inténtalo más tarde.';
   }
 
   if (error?.code === 'HX409' || error?.message?.includes('HX409')) {
-    return 'La operación ya existe con datos distintos. Recarga el estado antes de reintentar.';
+    return 'Encontramos una versión diferente de este cambio. Actualiza la pantalla antes de volver a intentarlo.';
   }
 
-  return 'No pudimos confirmar el plan con el servidor. Revisa la conexión e inténtalo de nuevo.';
+  return 'No pudimos confirmar el plan. Revisa tu conexión e inténtalo de nuevo.';
 }
 
 export async function getActivePlan(userId) {

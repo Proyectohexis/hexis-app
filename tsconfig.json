@@ -1,4 +1,16 @@
 {
   "compilerOptions": {},
-  "extends": "expo/tsconfig.base"
+  "extends": "expo/tsconfig.base",
+  "include": [
+    "App.js",
+    "index.js",
+    "src/**/*.js",
+    "src/**/*.cjs"
+  ],
+  "exclude": [
+    "dist/**",
+    "scripts/**",
+    "supabase/functions/**",
+    "tests/**"
+  ]
 }

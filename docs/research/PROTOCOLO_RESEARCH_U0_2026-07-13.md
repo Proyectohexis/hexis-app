@@ -1,7 +1,7 @@
 # Protocolo de research U0 — HEXIS
 
 - **Clasificación:** interno y propietario
-- **Versión:** 1.0
+- **Versión:** 1.1
 - **Fecha:** 2026-07-13
 - **Rol responsable:** App UX Researcher
 - **Revisión requerida:** Product Manager + Privacy/Data Protection + UX Lead
@@ -62,6 +62,8 @@ Estas son hipótesis, no hechos. Ninguna respuesta favorable autoriza claims de 
 - **Flujos:** onboarding, Hoy, fallo/reentrada y Revisión; navegación/libro de evidencia como tarea exploratoria.
 - **Objetivo:** medir finalización, asistencia crítica, tiempo, errores y comprensión.
 - **Preferencia de muestra:** participantes distintos de las entrevistas. Si se reutiliza una persona, se marcará como exposición previa y no se contará como evidencia independiente de primera comprensión.
+
+La usabilidad usa dos escenarios sintéticos congelados: aprendizaje para comprensión transversal y disciplina física no clínica para aproximarse al beachhead del PRD. Cada participante recibe solo uno, consistente de T1 a T4, mediante una matriz balanceada definida antes del piloto. Con 5–8 sesiones, los resultados por escenario son diagnósticos: no validan preferencia de mercado, eficacia conductual ni diferencias de segmento.
 
 ### 3.3 Secuencia recomendada de dos semanas
 
@@ -333,22 +335,38 @@ Finalizar con el cierre seguro y registrar un debrief de cinco minutos entre mod
 El prototipo debe tener:
 
 - identificador de versión y fecha visibles para el equipo;
-- cuenta sintética sin conexión a producción;
+- entrada dedicada y marcada para el equipo como “U0 · DATOS SINTÉTICOS”, fuera de la navegación normal;
+- cuenta sintética sin conexión a producción y fixtures locales inmutables;
+- bundle sin imports de repositorios, RPC, autenticación o almacenamiento productivo;
+- red denegada y preflight que falla ante cualquier solicitud saliente;
+- cero claves, tokens, correos, cuentas o identificadores reales;
 - datos ficticios consistentes en todas las pantallas;
 - estados de éxito, pendiente, error y reentrada preparados;
 - semana elegible para Revisión;
 - identidad, meta y métrica opcional ficticias;
 - un ajuste D+1 previsualizable;
 - grabación y analítica desactivadas por defecto;
+- sink analítico nulo, cero llamadas de eventos y ausencia de crash reporting/telemetría verificados de forma reproducible;
+- reset determinista entre sesiones;
 - camino de recuperación si falla el prototipo.
 
-Dataset sugerido, siempre ficticio:
+Escenario A `UX02-SC-A-APRENDER-v1`, siempre ficticio:
 
 - identidad: “Soy una persona que protege tiempo para aprender”;
 - meta: “Terminar un curso introductorio durante ocho semanas”;
 - compromiso: “Estudiar”; acción mínima: “Abrir la lección y leer un apartado”;
 - frecuencia: lunes, miércoles y viernes;
 - métrica opcional: “Lecciones terminadas”, sin información corporal ni clínica.
+
+Escenario B `UX02-SC-B-FUERZA-v1`, siempre ficticio y no clínico:
+
+- identidad: “Soy una persona que entrena con constancia”;
+- meta: “Completar un ciclo básico de fuerza durante ocho semanas”;
+- compromiso: “Entrenamiento de fuerza”; acción mínima: “Hacer el calentamiento y una serie técnica”;
+- frecuencia: martes, jueves y sábado;
+- métrica opcional: “Minutos de entrenamiento”, sin peso, perímetros, diagnóstico ni promesa física.
+
+Research congela antes del piloto `scenario_assignment_id`, plataforma y orden de variantes. Una persona no cambia de escenario dentro de T1–T4. Se registra y reporta `n/N` por escenario, pero no se calcula una superioridad A/B ni se usa el escenario A por sí solo para declarar validado el segmento inicial. El contrato completo de fixtures está en [UX-02](../product/UX_02_REVISION_CONTEXTUAL_ACCIONABLE_HANDOFF_2026-07-13.md#7-datasets-sintéticos-u0).
 
 ### 8.2 Guion de apertura — 0 a 8 minutos
 
@@ -430,15 +448,24 @@ Repetir el enunciado sin añadir información no es asistencia crítica. Explica
 
 **Escenario leído:**
 
-> Terminó la semana. Revisa qué ocurrió y decide qué cambiarías para la próxima sin perder el historial anterior.
+> Terminó la semana. Revisa qué ocurrió y decide qué harías la próxima semana sin perder el historial anterior.
 
 **Objetivo observable:** interpreta planificado vs. realizado, reconoce ausencia de datos, usa identidad/meta como contexto, decide mantener/reducir/aumentar/sustituir, selecciona compromiso y confirma el efecto D+1.
 
-**Éxito:** toma una decisión coherente con la evidencia, explica cuándo entra en vigor y sabe que el historial previo no se reescribe.
+**Éxito:** elige cualquier decisión sin asistencia crítica, completa correctamente la rama que eligió, explica cuándo entra en vigor o que `Mantener` no cambia configuración y sabe que el historial previo no se reescribe.
 
 **Medir:** tiempo, datos consultados, interpretación de métrica opcional, decisión, compromiso seleccionado, comprensión D+1, asistencia y confianza 1–5.
 
 **Umbral de aprendizaje:** mediana ≤3 minutos, 80% con código 2 y 80% explica correctamente efecto D+1 e historial preservado.
+
+No existe una dirección correcta. La elección o justificación personal no se califica como “coherente/incoherente”. Para T4:
+
+- código `2`: cualquier opción elegida sin asistencia, rama válida y teach-back correcto de cambio/no cambio, fecha e historia;
+- código `1`: completa solo después de revelar control, significado, fecha o consecuencia;
+- código `0`: no completa, produce un efecto diferente al mostrado, atribuye causalidad/recomendación o explica incorrectamente fecha/historia;
+- `NA`: defecto del prototipo que impide medir; nunca se asigna por la dirección elegida.
+
+Las variantes diagnósticas definidas en UX-02 se muestran únicamente después de cerrar T1–T4: máximo una o dos por persona, según matriz balanceada congelada, con un tope de ocho minutos. Su tiempo y resultado no entran en la métrica principal.
 
 ### 8.8 Tarea T5 — Navegación y libro de evidencia (exploratoria)
 
@@ -486,6 +513,8 @@ Cerrar con: “Si pudieras cambiar una sola cosa antes de usarla, ¿cuál sería
 | Comprensión | respuestas con puntuación 2 ÷ respuestas válidas | Gate conceptual |
 
 Con 5–8 participantes no se presentarán porcentajes como estimaciones poblacionales. Siempre mostrar `n/N`, por ejemplo `5/6`, además del porcentaje direccional.
+
+Además del total, se reportan `n/N`, mediana y rango por `scenario_assignment_id` cuando el denominador lo permita. Esa desagregación sirve para detectar un bloqueo contextual; la muestra no permite estimar diferencias entre aprendizaje y disciplina física ni elegir un mercado por comparación A/B.
 
 ### 9.2 Cronometraje
 
@@ -542,6 +571,8 @@ No convertir “la mayoría prefiere” en decisión si contradice accesibilidad
 session_id: U0-I-### | U0-U-###
 study_version:
 prototype_version: NA | identificador
+scenario_assignment_id: NA | UX02-SC-A-APRENDER-v1 | UX02-SC-B-FUERZA-v1
+variant_assignment_id: NA | identificador congelado
 date:
 moderator_code:
 observer_code:
@@ -710,6 +741,8 @@ Usabilidad se cierra entre 5 y 8 solo después de cubrir Android/iOS y todos los
 - **moderador:** usar guion y clasificar asistencia;
 - **exposición:** marcar participantes que ya vieron el concepto;
 - **selección:** no reclutar solo personas altamente disciplinadas o fans de trackers;
+- **escenario:** asignar A/B con matriz congelada, mantenerlo de T1 a T4 y no presentar uno como versión recomendada;
+- **orden:** fijar el orden por versión; cualquier contrabalanceo usa variantes y asignaciones predefinidas, nunca cambios improvisados durante la tanda;
 - **muestra pequeña:** reportar `n/N`, no generalizar prevalencia.
 
 ## 13. Preflight operativo
@@ -723,7 +756,9 @@ No se puede reclutar hasta marcar todo:
 - [ ] Compensación y proceso de pago están aprobados, si aplican.
 - [ ] Screener y consentimiento tienen versión congelada.
 - [ ] Prototipo tiene versión, dataset sintético y analítica deshabilitada.
+- [ ] Harness separado probado: fixtures inmutables, bundle sin repositorios/RPC/auth/almacenamiento productivo, red denegada y cero telemetría.
 - [ ] No hay credenciales o datos reales en cuentas de prueba.
+- [ ] Matriz de `scenario_assignment_id` y variantes está congelada; cada participante tiene un solo escenario T1–T4 y máximo dos variantes diagnósticas.
 - [ ] Runbook de malestar/información fuera de alcance está aprobado.
 - [ ] Almacenamiento cifrado y permisos fueron probados.
 - [ ] Pilotos completados y cambios documentados.

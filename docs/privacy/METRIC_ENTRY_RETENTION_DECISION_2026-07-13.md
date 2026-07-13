@@ -15,7 +15,7 @@ No determina una obligación legal ni fija un plazo de conservación. La jurisdi
 
 ## 2. Resumen de la decisión pendiente
 
-Cuando una persona pulsa **Eliminar** sobre una entrada métrica, HEXIS actualmente:
+Cuando una persona pulsa **Ocultar** sobre una entrada métrica, HEXIS actualmente:
 
 1. conserva la fila completa;
 2. fija `deleted_at`;
@@ -111,9 +111,9 @@ La exportación es una copia de los datos que el sistema decide entregar al titu
 
 | Riesgo | Impacto |
 |---|---|
-| Expectativa incorrecta | La etiqueta “Eliminar” puede interpretarse como borrado cuando solo oculta |
+| Expectativa incorrecta | Reducida en pre-alpha al usar “Ocultar” y explicar que el contenido se conserva; falta resolver el borrado definitivo |
 | Minimización insuficiente | Valor y nota se conservan sin un plazo aprobado |
-| Exportación sorpresiva | Un dato eliminado en la UI reaparece completo en el archivo exportado |
+| Exportación sorpresiva | Reducida en pre-alpha con una advertencia previa; el dato ocultado todavía aparece completo en el archivo exportado |
 | Retención indefinida de facto | No existe TTL ni proceso de purga documentado para estas filas |
 | Backups y restauración | Una restauración puede prolongar o reintroducir datos si no existe un ledger de borrados |
 | Hashes derivados | Los fingerprints no son contenido en claro, pero tampoco equivalen a anonimización |
@@ -168,7 +168,9 @@ Principios que debe cumplir la decisión final:
 - La idempotencia no justifica conservar el contenido de la medición.
 - La exportación no debe reexponer valor o nota que la persona eliminó.
 - Los backups deben respetar el borrado mediante expiración y reaplicación de un ledger mínimo.
-- El borrado de cuenta debe continuar eliminando todos los datos y recibos asociados.
+- El borrado de cuenta debe eliminar la cuenta y su contenido principal. Cualquier recibo técnico
+  mínimo que sobreviva para reconciliar reintentos requiere finalidad, campos, acceso, expiración y
+  purga efectiva aprobados; el recibo lógico actual no equivale a una purga garantizada en 24 horas.
 
 ## 8. Decisiones que Legal/DPO debe responder
 

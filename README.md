@@ -13,7 +13,9 @@ Actualización de ejecución del 13 de julio de 2026:
 - la versión de la pre-alpha quedó alineada en `0.1.0`;
 - la primera Revisión ya calcula la última semana ISO cerrada en la zona del plan, comunica la primera fecha elegible y no consulta ni envía semanas fuera de vigencia;
 - una cola offline ilegible ya no se restablece silenciosamente: primero persiste un aviso diagnóstico mínimo, falla de forma conservadora si no puede guardarlo y lo muestra en Hoy y Cuenta hasta confirmación;
-- el gate local integrado pasa sintaxis en 95 archivos, dependencias declaradas y 158/158 pruebas unitarias/de contrato;
+- el gate móvil local pasa typecheck incremental de 20 módulos, sintaxis en 97 archivos,
+  dependencias declaradas y 164/164 pruebas unitarias/de contrato; Deno check/lint también pasa
+  para la Edge Function;
 - CI bloquea advisories altos/críticos, ejecuta privacidad E2E, escanea secretos de alta confianza y conserva evidencia compacta; el corte `d22ab54` pasó [`mobile-checks` y `database-checks`](https://github.com/Proyectohexis/hexis-app/actions/runs/29287951627), por lo que C0 quedó aprobado para su alcance técnico local;
 - los protocolos de research U0 y de retención de entradas métricas están documentados, pero siguen sin aprobación humana ni datos reales.
 
@@ -45,10 +47,10 @@ El corte histórico está en `docs/execution/EXECUTION_STATUS_2026-07-12.md`; el
 - Vigencia temporal D/D+1: Hoy conserva la versión efectiva, los slots no se liberan antes de fecha y ningún aviso one-shot sobrevive a `ends_on`.
 - Consistencia, recuperación, SEC v1 y revisión semanal conciliada.
 - Elegibilidad de Revisión por semana ISO cerrada y zona del plan, con estado previo al primer cierre.
-- Una métrica opcional con alta, edición, eliminación auditada y aviso contextual.
+- Una métrica opcional con alta, edición, ocultación transparente y aviso contextual.
 - Recordatorios locales opt-in, contenido privado, reconciliación y navegación segura a Hoy.
 - Guardrails de recordatorios: horizonte one-shot de 21 días, control global, quiet hours, máximo dos por día y confirmación de zona.
-- Exportación JSON y eliminación reforzada con contraseña, frase exacta y purga local verificada.
+- Copia de datos y eliminación de cuenta reforzada con contraseña, frase exacta y purga local verificada.
 - Taxonomía analítica v1 allowlist, instrumentada y deshabilitada hasta aprobar proveedor/consentimiento.
 - RLS deny-by-default, RPC atómicas y harness usuario A/usuario B/anónimo.
 - CI móvil y de base de datos versionado.
@@ -115,17 +117,25 @@ En un Android físico conectado a la misma Wi‑Fi, usa la IP privada del equipo
 ## Calidad móvil
 
 ```bash
+npm run typecheck:client-core
 npm run verify:syntax
 npm run verify:deps
 npm test
 npm run doctor
 npm run export:android
 npm run export:ios
-npm run check
+npm run check:mobile
 npm run test:privacy:e2e
+npm run typecheck:edge
+npm run lint:edge
 ```
 
-`npm run check` es el gate local reproducible. Un build nativo iOS firmado requiere macOS, identificadores y credenciales; los exports JavaScript no sustituyen esa prueba.
+`npm run check:mobile` es el gate móvil local reproducible (`npm run check` conserva ese alias) y
+comienza con el typecheck incremental de 20
+módulos del núcleo. `npm run typecheck:all` mide la deuda JavaScript restante y todavía falla de
+forma conocida; no forma parte del gate hasta corregirla sin desactivar reglas. Los dos comandos
+de Edge Functions requieren Deno 2.8.1. Un build nativo iOS firmado requiere macOS,
+identificadores y credenciales; los exports JavaScript no sustituyen esa prueba.
 
 ## Supabase local
 

@@ -76,7 +76,17 @@ function continuityForTimeline(timeline) {
 }
 
 function recoveryForTimeline(timeline) {
+  /**
+   * @type {Array<{
+   *   missed_dates: string[],
+   *   missed_opportunities: number,
+   *   recovered_on: string | null,
+   *   started_on: string,
+   *   status: 'open' | 'recovered',
+   * }>}
+   */
   const episodes = [];
+  /** @type {null | (typeof episodes)[number]} */
   let openEpisode = null;
 
   for (const entry of timeline) {

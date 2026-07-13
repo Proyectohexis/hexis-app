@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "checkJs": true,
+    "noImplicitAny": false,
+    "strict": true
+  },
+  "include": [
+    "src/analytics/**/*.cjs",
+    "src/data/repositories/**/*.cjs",
+    "src/domain/**/*.cjs",
+    "src/lib/**/*.cjs",
+    "src/screens/**/*.cjs"
+  ]
+}

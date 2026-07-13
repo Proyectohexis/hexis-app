@@ -99,8 +99,8 @@ export default function ResetPasswordScreen({ navigation, onExitRecovery }) {
             </Text>
             {revocationWarning ? (
               <Text accessibilityRole="alert" style={styles.warning}>
-                Cerramos la sesión de este dispositivo, pero no pudimos confirmar el cierre remoto
-                de las demás sesiones. Revisa la seguridad de tu cuenta después de entrar.
+                Cerramos la sesión de este dispositivo, pero no pudimos confirmar que se cerraran
+                las sesiones en otros dispositivos. Revisa la seguridad de tu cuenta después de entrar.
               </Text>
             ) : null}
           </View>

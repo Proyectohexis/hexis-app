@@ -128,7 +128,7 @@ export default function TodayScreen() {
           if (knownRecoveryNotice) {
             setQueueRecoveryNotice(knownRecoveryNotice);
             setQueueUnavailable(false);
-            setQueueRecoveryError('No pudimos volver a verificar la cola después de recuperarla. El aviso se conserva.');
+            setQueueRecoveryError('No pudimos volver a verificar los cambios pendientes después de recuperarlos. El aviso se conserva.');
           } else {
             setQueueRecoveryNotice(null);
             setQueueUnavailable(true);
@@ -191,7 +191,7 @@ export default function TodayScreen() {
     if (currentDate !== localDate) {
       setActionErrors((current) => ({
         ...current,
-        [habit.id]: 'El día civil cambió. Actualizamos tu protocolo antes de registrar.',
+        [habit.id]: 'El día cambió. Actualizamos tus compromisos antes de registrar.',
       }));
       setReloadKey((value) => value + 1);
       return;
@@ -298,7 +298,7 @@ export default function TodayScreen() {
           });
           setActionErrors((current) => ({
             ...current,
-            [habit.id]: 'No pudimos confirmar ni encolar el cambio. Reinténtalo cuando recuperes conexión.',
+            [habit.id]: 'No pudimos confirmar ni guardar el cambio en este dispositivo. Reinténtalo cuando recuperes la conexión.',
           }));
           return;
         }
@@ -333,7 +333,7 @@ export default function TodayScreen() {
       });
       setActionErrors((current) => ({
         ...current,
-        [habit.id]: 'No pudimos reactivar la sincronización. El cambio local sigue conservado.',
+        [habit.id]: 'No pudimos volver a enviar el cambio. Sigue guardado en este dispositivo.',
       }));
     } finally {
       setPendingById((current) => ({ ...current, [habit.id]: false }));
@@ -418,14 +418,14 @@ export default function TodayScreen() {
             {pendingOfflineCount ? (
               <View style={styles.offlineCard} accessibilityLiveRegion="polite">
                 <Text style={styles.offlineTitle}>{pendingOfflineCount} {pendingOfflineCount === 1 ? 'cambio pendiente' : 'cambios pendientes'}</Text>
-                <Text style={styles.offlineCopy}>La app volverá a sincronizarlos con el mismo identificador al recuperar conexión.</Text>
+                <Text style={styles.offlineCopy}>La app volverá a intentarlo cuando recuperes la conexión, sin duplicar los cambios.</Text>
               </View>
             ) : null}
 
             {failedOfflineCount ? (
               <View style={styles.failedSyncCard} accessibilityRole="alert">
                 <Text style={styles.failedSyncTitle}>{failedOfflineCount} {failedOfflineCount === 1 ? 'cambio necesita atención' : 'cambios necesitan atención'}</Text>
-                <Text style={styles.offlineCopy}>La intención local se conserva, pero todavía no forma parte de la evidencia confirmada.</Text>
+                <Text style={styles.offlineCopy}>El cambio sigue guardado en este dispositivo, pero todavía no aparece como evidencia confirmada.</Text>
               </View>
             ) : null}
 
@@ -495,7 +495,7 @@ export default function TodayScreen() {
                           onPress={() => retryFailedEvidence(habit)}
                           disabled={pending}
                         >
-                          <Text style={styles.minimumButtonText}>Reintentar la misma operación</Text>
+                          <Text style={styles.minimumButtonText}>Volver a enviar este cambio</Text>
                         </TouchableOpacity>
                       ) : null}
 
@@ -507,7 +507,7 @@ export default function TodayScreen() {
                             style={styles.inlineRetry}
                             onPress={() => commitEvidence(habit, operationByHabitRef.current[habit.id]?.intendedCompleted ?? !habit.completed, operationByHabitRef.current[habit.id]?.completionLevel)}
                           >
-                            <Text style={styles.inlineRetryText}>Reintentar la misma operación</Text>
+                            <Text style={styles.inlineRetryText}>Volver a intentar este cambio</Text>
                           </TouchableOpacity>
                         </View>
                       ) : null}

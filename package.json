@@ -14,10 +14,15 @@
     "db:reset": "supabase db reset",
     "test:db": "supabase db reset && supabase test db",
     "test:privacy:e2e": "node scripts/privacy-e2e.cjs",
+    "typecheck:client-core": "tsc -p tsconfig.client-core.json --pretty false",
+    "typecheck:all": "tsc -p tsconfig.json --allowJs --checkJs --noEmit --pretty false",
+    "typecheck:edge": "deno check --config supabase/functions/delete-account/deno.json --lock supabase/functions/delete-account/deno.lock --frozen supabase/functions/delete-account/index.ts",
+    "lint:edge": "deno lint --config supabase/functions/delete-account/deno.json supabase/functions/delete-account/index.ts",
     "verify:deps": "node scripts/verify-dependencies.cjs",
     "verify:syntax": "node scripts/verify-syntax.cjs",
     "test": "node --test tests/*.test.cjs",
-    "check": "npm run verify:syntax && npm run verify:deps && npm test && npm run doctor && npm run export:android && npm run export:ios"
+    "check:mobile": "npm run typecheck:client-core && npm run verify:syntax && npm run verify:deps && npm test && npm run doctor && npm run export:android && npm run export:ios",
+    "check": "npm run check:mobile"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "0.4.2",

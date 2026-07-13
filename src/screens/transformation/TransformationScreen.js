@@ -244,7 +244,7 @@ export default function TransformationScreen() {
       const hasRemainingEntries = entries.some((candidate) => candidate.id !== entry.id);
       setEntries((current) => current.filter((candidate) => candidate.id !== entry.id));
       if (editingEntry?.id === entry.id) resetEntryForm();
-      announceForAccessibility('Registro eliminado.');
+      announceForAccessibility('Registro ocultado del historial.');
       focusAccessibilityElement(hasRemainingEntries ? historyHeaderRef : screenTitleRef, 140);
     } catch (mutationError) {
       setDeleteError(getMetricRepositoryErrorMessage(mutationError));
@@ -255,11 +255,11 @@ export default function TransformationScreen() {
 
   function confirmDelete(entry) {
     Alert.alert(
-      'Eliminar registro',
-      'Este registro dejará de aparecer en tu historial. La operación quedará auditada para sincronización segura.',
+      'Ocultar registro del historial',
+      'Dejará de aparecer en la app, pero en esta versión de prueba su contenido seguirá conservado en tu cuenta y aparecerá en tu copia de datos.',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar', style: 'destructive', onPress: () => removeEntry(entry) },
+        { text: 'Ocultar', style: 'destructive', onPress: () => removeEntry(entry) },
       ],
     );
   }
@@ -299,7 +299,10 @@ export default function TransformationScreen() {
             <>
               <View style={styles.noticeCard}>
                 <Text style={styles.noticeTitle}>Esta función es opcional.</Text>
-                <Text style={styles.noticeCopy}>Guardarás valores personales. Usa solo datos de prueba hasta validar RLS, exportación y eliminación en staging.</Text>
+                <Text style={styles.noticeCopy}>
+                  Guardarás valores personales. Mientras HEXIS esté en pruebas, usa datos creados
+                  para probar la app; aún estamos verificando su protección, descarga y eliminación.
+                </Text>
               </View>
 
               <Text accessibilityRole="header" style={styles.sectionTitle}>Elige una métrica</Text>
@@ -346,14 +349,17 @@ export default function TransformationScreen() {
 
               <View style={styles.noticeCard}>
                 <Text style={styles.noticeTitle}>Dato personal opcional</Text>
-                <Text style={styles.noticeCopy}>No uses datos reales hasta que exportación, eliminación y aislamiento remoto estén probados.</Text>
+                <Text style={styles.noticeCopy}>
+                  Mientras HEXIS esté en pruebas, usa datos creados para probar la app; aún estamos
+                  verificando su protección, descarga y eliminación.
+                </Text>
               </View>
 
               <View style={styles.formCard} onLayout={(event) => { entryFormYRef.current = event.nativeEvent.layout.y; }}>
                 <Text accessibilityRole="header" style={styles.sectionTitle}>{editingEntry ? 'Editar registro' : `Registrar ${metric.label}`}</Text>
                 <Text style={styles.label}>Valor · {metric.unit}</Text>
                 <TextInput ref={entryValueInputRef} accessibilityLabel={`Valor en ${metric.unit}`} style={styles.input} value={entryDraft.value} onChangeText={(value) => updateEntryDraft('value', value)} keyboardType="numbers-and-punctuation" maxLength={16} placeholder="0" placeholderTextColor={colors.text.tertiary} returnKeyType="next" onSubmitEditing={() => entryDateInputRef.current?.focus()} />
-                <Text style={styles.label}>Fecha civil</Text>
+                <Text style={styles.label}>Fecha</Text>
                 <TextInput ref={entryDateInputRef} accessibilityLabel="Fecha del registro, formato año mes día" style={styles.input} value={entryDraft.localDate} onChangeText={(value) => updateEntryDraft('localDate', value)} maxLength={10} placeholder="YYYY-MM-DD" placeholderTextColor={colors.text.tertiary} returnKeyType="next" onSubmitEditing={() => entryNoteInputRef.current?.focus()} />
                 <Text style={styles.label}>Nota opcional</Text>
                 <TextInput ref={entryNoteInputRef} accessibilityLabel="Nota opcional del registro" style={[styles.input, styles.multiline]} value={entryDraft.note} onChangeText={(value) => updateEntryDraft('note', value)} multiline maxLength={500} textAlignVertical="top" placeholder="Contexto útil para la revisión" placeholderTextColor={colors.text.tertiary} />
@@ -377,7 +383,7 @@ export default function TransformationScreen() {
                       </View>
                       <View style={styles.entryActions}>
                         <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Editar registro de ${entry.local_date}, ${entry.value} ${metric.unit}`} style={styles.textAction} onPress={() => startEdit(entry)} disabled={Boolean(deletingId)}><Text style={styles.editText}>Editar</Text></TouchableOpacity>
-                        <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Eliminar registro de ${entry.local_date}, ${entry.value} ${metric.unit}`} style={styles.textAction} onPress={() => confirmDelete(entry)} disabled={Boolean(deletingId)}><Text style={styles.deleteText}>Eliminar</Text></TouchableOpacity>
+                        <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Ocultar del historial el registro de ${entry.local_date}, ${entry.value} ${metric.unit}`} style={styles.textAction} onPress={() => confirmDelete(entry)} disabled={Boolean(deletingId)}><Text style={styles.deleteText}>Ocultar</Text></TouchableOpacity>
                         {deletingId === entry.id ? <ActivityIndicator size="small" color={colors.accent.primary} /> : null}
                       </View>
                     </View>

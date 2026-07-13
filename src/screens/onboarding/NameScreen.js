@@ -160,7 +160,8 @@ export default function NameScreen({ navigation, route }) {
             </View>
 
             <Text style={styles.privacyCopy}>
-              Tu correo se usa para autenticar la cuenta. No uses datos reales hasta que el entorno de Supabase y sus políticas RLS hayan sido validados.
+              Tu correo se usa para crear y proteger tu acceso. Mientras HEXIS esté en pruebas,
+              utiliza una cuenta y contenido destinados solo a probar la app.
             </Text>
 
             <TouchableOpacity

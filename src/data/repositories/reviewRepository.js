@@ -19,12 +19,12 @@ function configurationError() {
 
 export function getReviewRepositoryErrorMessage(error) {
   if (['42P01', '42883', 'PGRST202', 'PGRST205'].includes(error?.code)) {
-    return 'El backend de desarrollo todavía no tiene revisiones semanales.';
+    return 'Las revisiones no están disponibles en esta instalación de HEXIS. Inténtalo más tarde.';
   }
   if (error?.code === 'HX409' || error?.message?.includes('HX409')) {
     return 'Esta revisión ya existe con otro contenido. Recarga antes de reintentar.';
   }
-  return 'No pudimos confirmar la revisión con el servidor. Revisa la conexión e inténtalo de nuevo.';
+  return 'No pudimos confirmar la revisión. Revisa tu conexión e inténtalo de nuevo.';
 }
 
 export async function getWeeklyReview({ userId, planId, weekStart }) {

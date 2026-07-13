@@ -48,9 +48,9 @@ export function getPrivacyErrorMessage(error) {
     case 'sharing_unavailable':
       return 'Este dispositivo no permite guardar o compartir el archivo de exportación.';
     case 'invalid_export_snapshot':
-      return 'El servidor devolvió una exportación inválida. No se guardó ningún archivo.';
+      return 'No pudimos preparar una copia válida. No se guardó ningún archivo.';
     default:
-      return 'No pudimos completar esta operación de privacidad. Inténtalo de nuevo.';
+      return 'No pudimos completar esta solicitud. Inténtalo de nuevo.';
   }
 }
 

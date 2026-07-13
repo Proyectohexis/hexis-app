@@ -60,7 +60,7 @@ export default function AccountScreen({ navigation }) {
           if (active) {
             setQueueRecoveryNotice(null);
             setQueueUnavailable(true);
-            setError('No pudimos verificar los cambios offline antes de cerrar sesión.');
+            setError('No pudimos verificar los cambios guardados sin conexión antes de cerrar sesión.');
           }
         });
       return () => { active = false; };
@@ -84,7 +84,7 @@ export default function AccountScreen({ navigation }) {
   function handleSignOut() {
     if (signingOut) return;
     if (!queueReady) {
-      setError('No cerraremos la sesión hasta verificar los cambios offline de este dispositivo.');
+      setError('No cerraremos la sesión hasta verificar los cambios guardados sin conexión en este dispositivo.');
       return;
     }
     if (!pendingCount) {
@@ -137,7 +137,7 @@ export default function AccountScreen({ navigation }) {
       if (result.error) throw result.error;
       const shared = await shareAccountExport(result.data);
       if (shared.error) throw shared.error;
-      setPrivacyMessage('La exportación JSON se preparó y se abrió en el menú seguro del dispositivo.');
+      setPrivacyMessage('El menú del dispositivo se cerró. Si elegiste un destino, revisa allí si la copia se guardó o compartió.');
     } catch (exportError) {
       setError(getPrivacyErrorMessage(exportError));
     } finally {
@@ -173,12 +173,12 @@ export default function AccountScreen({ navigation }) {
       if (cleanup.warnings.length) {
         Alert.alert(
           'Cuenta eliminada con limpieza pendiente',
-          'El servidor eliminó tu cuenta, pero el dispositivo no pudo borrar toda la información local. Cierra HEXIS y elimina los datos de la app desde los ajustes del dispositivo antes de prestarlo o compartirlo.',
+          'Tu acceso y el contenido de tu cuenta fueron eliminados, pero este dispositivo no pudo borrar toda la información local. Cierra HEXIS y elimina los datos de la app desde los ajustes antes de prestarlo o compartirlo. Para reconocer reintentos, se conserva un comprobante mínimo sin tu correo ni contenido; todavía no podemos garantizar cuándo se eliminará.',
         );
       } else {
         Alert.alert(
           'Cuenta eliminada',
-          'Supabase confirmó la eliminación de la cuenta, sus datos asociados y la información local de este dispositivo.',
+          'Tu acceso, el contenido de tu cuenta y la información local de este dispositivo fueron eliminados. Para reconocer reintentos, se conserva un comprobante mínimo sin tu correo ni contenido; todavía no podemos garantizar cuándo se eliminará.',
         );
       }
     } catch (deletionError) {
@@ -192,11 +192,11 @@ export default function AccountScreen({ navigation }) {
   function confirmAccountDeletion() {
     if (privacyAction) return;
     if (!queueReady) {
-      setError('Espera mientras verificamos los cambios offline antes de eliminar la cuenta.');
+      setError('Espera mientras verificamos los cambios guardados sin conexión antes de eliminar la cuenta.');
       return;
     }
     if (pendingCount) {
-      setError('Sincroniza o descarta tus cambios offline antes de eliminar la cuenta.');
+      setError('Conéctate para enviar tus cambios pendientes o descártalos antes de eliminar la cuenta.');
       return;
     }
     if (!deletePassword || deleteConfirmation !== DELETE_CONFIRMATION) {
@@ -204,11 +204,11 @@ export default function AccountScreen({ navigation }) {
       return;
     }
     Alert.alert(
-      'Eliminar cuenta definitivamente',
-      'Esta acción elimina la cuenta de autenticación y los datos asociados. No se puede deshacer.',
+      'Eliminar cuenta',
+      'Esta acción elimina tu acceso y el contenido de tu cuenta; no se puede deshacer. Para reconocer un reintento, queda un comprobante mínimo sin tu correo ni contenido. Todavía no podemos garantizar cuándo se eliminará ni cómo se tratan las copias de respaldo, así que usa solo datos de prueba.',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Eliminar definitivamente', style: 'destructive', onPress: performAccountDeletion },
+        { text: 'Eliminar cuenta', style: 'destructive', onPress: performAccountDeletion },
       ],
     );
   }
@@ -248,11 +248,12 @@ export default function AccountScreen({ navigation }) {
         <View style={styles.privacyCard}>
           <Text accessibilityRole="header" style={styles.privacyTitle}>Tus datos</Text>
           <Text style={styles.privacyCopy}>
-            Puedes preparar una copia JSON o solicitar la eliminación definitiva. Ambos controles requieren el backend de privacidad de HEXIS.
+            Puedes preparar una copia de tus datos o eliminar tu acceso y el contenido de tu cuenta.
+            Necesitas conexión para completar cualquiera de las dos acciones.
           </Text>
           {pendingCount ? (
             <Text accessibilityRole="alert" style={styles.pendingWarning}>
-              {pendingCount} {pendingCount === 1 ? 'cambio offline pendiente' : 'cambios offline pendientes'}.
+              {pendingCount} {pendingCount === 1 ? 'cambio pendiente sin conexión' : 'cambios pendientes sin conexión'}.
             </Text>
           ) : null}
         </View>
@@ -264,7 +265,7 @@ export default function AccountScreen({ navigation }) {
         <View style={styles.privacyControls}>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Exportar mis datos en formato JSON"
+            accessibilityLabel="Exportar una copia de mis datos"
             accessibilityState={{ disabled: Boolean(privacyAction), busy: privacyAction === 'export' }}
             style={[styles.dataButton, privacyAction && styles.disabled]}
             onPress={exportAccount}
@@ -294,7 +295,8 @@ export default function AccountScreen({ navigation }) {
             <View style={styles.deletionForm}>
               <Text accessibilityRole="header" style={styles.deletionTitle}>Confirmación reforzada</Text>
               <Text style={styles.deletionCopy}>
-                Escribe tu contraseña actual y la frase exacta {DELETE_CONFIRMATION}. La contraseña se usa solo para reautenticar esta solicitud en el servidor.
+                Escribe tu contraseña actual y la frase exacta {DELETE_CONFIRMATION}. La contraseña
+                se envía para comprobar que eres tú; no se guarda, registra ni devuelve en la respuesta.
               </Text>
               <Text style={styles.inputLabel}>Contraseña actual</Text>
               <TextInput
@@ -322,13 +324,13 @@ export default function AccountScreen({ navigation }) {
               />
               <TouchableOpacity
                 accessibilityRole="button"
-                accessibilityLabel="Eliminar cuenta definitivamente"
+                accessibilityLabel="Eliminar cuenta"
                 accessibilityState={{ disabled: privacyAction === 'delete' || !queueReady || pendingCount > 0, busy: privacyAction === 'delete' }}
                 style={[styles.destructiveButton, (privacyAction === 'delete' || !queueReady || pendingCount > 0) && styles.disabled]}
                 onPress={confirmAccountDeletion}
                 disabled={privacyAction === 'delete' || !queueReady || pendingCount > 0}
               >
-                {privacyAction === 'delete' ? <ActivityIndicator color={colors.text.primary} /> : <Text style={styles.destructiveButtonText}>Eliminar definitivamente</Text>}
+                {privacyAction === 'delete' ? <ActivityIndicator color={colors.text.primary} /> : <Text style={styles.destructiveButtonText}>Eliminar cuenta</Text>}
               </TouchableOpacity>
             </View>
           ) : null}

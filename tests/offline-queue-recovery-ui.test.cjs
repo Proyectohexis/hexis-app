@@ -14,7 +14,7 @@ const account = readFileSync('src/screens/account/AccountScreen.js', 'utf8');
 test('el aviso de recuperación es visible, accesible y requiere confirmación explícita', () => {
   assert.match(component, /accessibilityRole="alert"/);
   assert.match(component, /accessibilityLiveRegion="assertive"/);
-  assert.match(component, /Referencia de diagnóstico/);
+  assert.match(component, /Código para soporte/);
   assert.match(component, /Entiendo el posible cambio faltante/);
   assert.match(component, /recovery_notice_unreadable/);
   assert.match(component, /accessibilityRole="button"/);

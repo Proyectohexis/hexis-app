@@ -33,7 +33,8 @@ function collectDateIssue(value, path, errors, required = false) {
   try {
     parseDateKey(value, path);
   } catch (error) {
-    errors.push(issue('invalid_date', path, error.message));
+    const message = error instanceof Error ? error.message : String(error);
+    errors.push(issue('invalid_date', path, message));
   }
 }
 

@@ -502,7 +502,7 @@ export default function DisciplineScreen({ navigation }) {
   function confirmArchive(habit) {
     Alert.alert(
       'Archivar compromiso',
-      `La evidencia anterior se conservará. Si está activo, el archivo será efectivo el ${nextEffectiveOn}.`,
+      `La evidencia anterior se conservará. Si está activo, el compromiso quedará archivado el ${nextEffectiveOn}.`,
       [
         { text: 'Cancelar', style: 'cancel' },
         { text: 'Archivar', style: 'destructive', onPress: () => changeStatus(habit, 'archived') },
@@ -786,7 +786,7 @@ export default function DisciplineScreen({ navigation }) {
                     {actionError ? (
                       <View style={styles.actionErrorCard}>
                         <Text accessibilityRole="alert" style={styles.error}>{actionError}</Text>
-                        <Text style={styles.retryHint}>Repite la misma acción para reutilizar su identificador seguro.</Text>
+                        <Text style={styles.retryHint}>Repite la misma acción; HEXIS reconocerá el intento anterior y evitará duplicarlo.</Text>
                       </View>
                     ) : null}
                   </View>

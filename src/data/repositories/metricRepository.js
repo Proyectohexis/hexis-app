@@ -33,12 +33,12 @@ function configurationError() {
 
 export function getMetricRepositoryErrorMessage(error) {
   if (['42P01', '42883', 'PGRST202', 'PGRST205'].includes(error?.code)) {
-    return 'El backend de desarrollo todavía no tiene el modelo de transformación.';
+    return 'Las métricas no están disponibles en esta instalación de HEXIS. Inténtalo más tarde.';
   }
   if (error?.code === 'HX409' || error?.message?.includes('HX409')) {
-    return 'La operación ya existe con otro contenido. Recarga antes de reintentar.';
+    return 'Encontramos una versión diferente de este cambio. Actualiza la pantalla antes de volver a intentarlo.';
   }
-  return 'No pudimos confirmar el registro con el servidor. Revisa la conexión e inténtalo de nuevo.';
+  return 'No pudimos confirmar el registro. Revisa tu conexión e inténtalo de nuevo.';
 }
 
 export async function getActiveMetric({ userId, planId }) {
