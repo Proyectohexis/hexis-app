@@ -41,8 +41,9 @@ El primer corte R0/R1 ya produjo cambios verificables, sin adelantar gates exter
 - registro G0 creado; propiedad, licencia, visibilidad, IDs, cuentas y owners siguen abiertos.
 
 El estado operativo y la evidencia del corte están en
-`docs/execution/SPRINT_0_EXECUTION_2026-07-13.md`. C0 no se considera cerrado hasta que la
-revisión cruzada concluya y GitHub Actions confirme el commit publicado.
+`docs/execution/SPRINT_0_EXECUTION_2026-07-13.md`. La revisión cruzada terminó sin P0/P1 en el
+alcance corregido y [GitHub Actions #29287951627](https://github.com/Proyectohexis/hexis-app/actions/runs/29287951627)
+confirmó `mobile-checks` y `database-checks`; C0 está aprobado para este alcance técnico local.
 
 ## 2. Correcciones al diagnóstico anterior
 
@@ -76,7 +77,7 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 | Marca | Incompleta | Sistema dark-first consistente, pero assets de Expo siguen provisionales |
 | Arquitectura | Fuerte localmente | Capas claras, dominio testeable y servidor como fuente de verdad |
 | Seguridad/privacidad | Fuerte localmente | Buenas fronteras; operación real, retención y antiabuso siguen pendientes |
-| QA automatizado | Fuerte para pre-alpha | El corte R1 pasa 158/158 tests locales; la evidencia histórica incluye 68 pgTAP y privacidad local; faltan E2E móvil y nuevo CI remoto |
+| QA automatizado | Fuerte para pre-alpha | El corte R1 pasa 158/158 tests locales y CI remoto móvil/DB/privacidad; faltan E2E móvil real y QA nativo |
 | Release | Inmaduro | Sin IDs nativos, proyecto EAS, builds firmados ni matriz iOS/Android |
 | Operación | No preparada | Sin observabilidad activa, soporte, on-call, SLAs o restore probado |
 | Evidencia de valor | Ausente | Sin entrevistas, usabilidad, dogfood o métricas de cohortes |
@@ -501,7 +502,7 @@ Camino crítico: gobierno → integridad local/backend/producto → builds firma
 | 4 | Resolver retención de métricas | Privacy + Data | Matriz de retención aprobada | Opciones y recomendación listas; aprobación Legal/DPO pendiente |
 | 5 | Diseñar recuperación de cola corrupta | Offline + UX | Contrato y tests de no pérdida silenciosa | Implementado y re-gate local verde; QA nativo pendiente |
 | 6 | Consolidar migración `006` | Database | Fresh install/upgrade equivalentes | Diferido hasta inventariar remoto para evitar drift |
-| 7 | Endurecer CI | DevOps + Security QA | High/critical, privacy E2E, secret scan y artifacts | Implementado localmente; run remoto pendiente |
+| 7 | Endurecer CI | DevOps + Security QA | High/critical, privacy E2E, secret scan y artifacts | Implementado; GitHub Actions remoto verde |
 | 8 | Crear Supabase dev/staging | Cloud + Database | Entornos inventariados, sin datos reales | Bloqueado por acceso y owner |
 | 9 | Iniciar research | UX Research | Guion, screening y participantes reclutados | Protocolo listo; 0 reclutados, aprobación pendiente |
 | 10 | Iniciar marca/confianza | Brand + Legal + Support | Brief de assets, privacidad y soporte | Pendiente |

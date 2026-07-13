@@ -4,7 +4,7 @@
 
 **Alcance:** R0 Gobierno + R1 Integridad local
 
-**Estado:** implementación local integrada; gate remoto y decisiones externas pendientes
+**Estado:** corte técnico C0 aprobado; decisiones y gates externos pendientes
 
 ## Objetivo del corte
 
@@ -20,7 +20,7 @@ Cerrar el P1 de primera Revisión, eliminar pérdida silenciosa ante cola corrup
 | UX-01 | Elegibilidad de primera Revisión | Implementado y cubierto por regresión local | UI no consulta ni envía una semana fuera de vigencia; pruebas de semana parcial, lunes y zona |
 | SYNC-01 | Cola corrupta no silenciosa | Implementado y cubierto por regresión local | Aviso durable mínimo en Hoy/Cuenta, confirmación explícita y recuperación fail-closed |
 | PRV-01 | Retención de métricas | Diseño documentado; decisión bloqueada | `docs/privacy/METRIC_ENTRY_RETENTION_DECISION_2026-07-13.md`; no se cambió la DB sin Legal/DPO |
-| CI-01 | CI high/critical, privacidad y secretos | Implementado localmente; ejecución remota pendiente | `.github/workflows/ci.yml` y `scripts/scan-secrets.cjs` |
+| CI-01 | CI high/critical, privacidad y secretos | Implementado y PASS remoto | [GitHub Actions #29287951627](https://github.com/Proyectohexis/hexis-app/actions/runs/29287951627) |
 | U0-01 | Protocolo de discovery/usabilidad | Listo para aprobación; 0 participantes y 0 sesiones | `docs/research/PROTOCOLO_RESEARCH_U0_2026-07-13.md` |
 | DB-01 | Consolidación de migración 006 | Diferido hasta inventario remoto | No se debe reescribir una migración potencialmente aplicada sin comparar dev/staging |
 | DATA-01 | Supabase dev/staging | Bloqueado por acceso/owner | Inventario remoto y proyecto autorizado |
@@ -34,7 +34,7 @@ Cerrar el P1 de primera Revisión, eliminar pérdida silenciosa ante cola corrup
 | Unit tests y contratos | 158/158 PASS |
 | Secret scan de archivos versionados | PASS local; el alcance no incluye historial Git, entropía ni binarios |
 | Revisión cruzada de UX-01 y SYNC-01 | PASS: 0 P0/P1 identificados en el alcance local |
-| GitHub Actions del nuevo corte | Pendiente de publicar y observar |
+| GitHub Actions del commit `d22ab54` | PASS: `mobile-checks` y `database-checks` |
 
 La evidencia histórica de pgTAP, privacidad local, Expo Doctor y exports permanece en
 `docs/execution/EXECUTION_STATUS_2026-07-12.md`. Este corte no la presenta como reejecutada
@@ -53,7 +53,8 @@ debe repetir esos gates.
 - El secret scan cubre archivos de texto versionados en la revisión actual, no historial Git,
   entropía, binarios ni archivos mayores de 2 MiB.
 - Las Actions usan tags mayores y `ubuntu-latest`, no SHAs/imagen inmutables.
-- Docker/Supabase, privacidad E2E, Expo Doctor y bundles deben volver a demostrarse en CI remoto.
+- Docker/Supabase, privacidad E2E, Expo Doctor y bundles quedaron demostrados en el CI remoto
+  del commit `d22ab54`; su validación física nativa sigue pendiente.
 
 ## Reglas de ejecución
 
@@ -78,15 +79,15 @@ debe repetir esos gates.
 - Suites locales completas verdes.
 - Cero P0/P1 local conocido dentro del alcance ejecutado, o excepción explícita.
 
-**Estado actual:** pendiente. UX-01 y SYNC-01 están corregidos localmente, pero C0 no se cierra
-hasta que la revisión cruzada termine, el commit esté publicado y los jobs móviles y de base de
-datos pasen en GitHub Actions. PRV-01, DB-01 y DATA-01 permanecen como decisiones o dependencias
-explícitas; no se disfrazan como trabajo cerrado.
+**Estado actual:** aprobado para el alcance técnico local de este corte. UX-01 y SYNC-01 pasaron
+revisión cruzada, el commit `d22ab54` está publicado y `mobile-checks`/`database-checks` terminaron
+en `success`. Esta aprobación no cierra G0, T1, U0, A0 ni Q1. PRV-01, DB-01 y DATA-01 permanecen
+como decisiones o dependencias explícitas; no se disfrazan como trabajo cerrado.
 
 ## Handoff del corte
 
 - **Dirección/Legal:** resolver GOV-D01 a GOV-D07 y elegir la política PRV-01.
-- **DevOps/QA:** observar el CI remoto y conservar la URL del run como evidencia.
+- **DevOps/QA:** conservar los artefactos del run y llevar los checks a branch protection cuando exista acceso administrador.
 - **Cloud/Database:** inventariar Supabase antes de tocar migraciones aplicadas.
 - **Product/UX/Privacy:** aprobar el protocolo U0 antes de reclutar.
 - **Mobile QA:** validar los nuevos estados de Revisión y cola en binarios/dispositivos reales.

@@ -14,7 +14,7 @@ Actualización de ejecución del 13 de julio de 2026:
 - la primera Revisión ya calcula la última semana ISO cerrada en la zona del plan, comunica la primera fecha elegible y no consulta ni envía semanas fuera de vigencia;
 - una cola offline ilegible ya no se restablece silenciosamente: primero persiste un aviso diagnóstico mínimo, falla de forma conservadora si no puede guardarlo y lo muestra en Hoy y Cuenta hasta confirmación;
 - el gate local integrado pasa sintaxis en 95 archivos, dependencias declaradas y 158/158 pruebas unitarias/de contrato;
-- CI fue preparada para bloquear advisories altos/críticos, ejecutar privacidad E2E, escanear secretos de alta confianza y conservar evidencia compacta; su ejecución remota del nuevo corte debe confirmarse antes de cerrar C0;
+- CI bloquea advisories altos/críticos, ejecuta privacidad E2E, escanea secretos de alta confianza y conserva evidencia compacta; el corte `d22ab54` pasó [`mobile-checks` y `database-checks`](https://github.com/Proyectohexis/hexis-app/actions/runs/29287951627), por lo que C0 quedó aprobado para su alcance técnico local;
 - los protocolos de research U0 y de retención de entradas métricas están documentados, pero siguen sin aprobación humana ni datos reales.
 
 Evidencia local del 12 de julio de 2026:

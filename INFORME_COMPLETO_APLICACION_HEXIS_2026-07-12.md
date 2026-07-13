@@ -22,13 +22,13 @@ El estado real del proyecto es el de una **pre-alpha técnica con un vertical sl
 
 `identidad → protocolo → práctica diaria → evidencia → revisión semanal → ajuste`
 
-La fase técnica interna fue aprobada inicialmente con **0 P0 y 0 P1 registrados en código y contratos locales**. Una auditoría posterior de Producto/UX detectó un P1 verificable en la primera revisión semanal: la UI permitía intentar cerrar una semana anterior al inicio del plan y el servidor la rechazaba correctamente. Ese resultado inicial queda como evidencia histórica. El 13 de julio se corrigió la elegibilidad en dominio y UI y se añadieron regresiones de semana parcial, frontera de lunes y zona del plan. El gate C0 sigue pendiente hasta publicar el corte y confirmar CI remota; el Gate Q1 continúa bloqueado por backend remoto, backup/restauración, builds firmados, matriz física Android/iOS, accesibilidad nativa, observabilidad, política legal, soporte y dogfood.
+La fase técnica interna fue aprobada inicialmente con **0 P0 y 0 P1 registrados en código y contratos locales**. Una auditoría posterior de Producto/UX detectó un P1 verificable en la primera revisión semanal: la UI permitía intentar cerrar una semana anterior al inicio del plan y el servidor la rechazaba correctamente. Ese resultado inicial queda como evidencia histórica. El 13 de julio se corrigió la elegibilidad en dominio y UI y se añadieron regresiones de semana parcial, frontera de lunes y zona del plan. El corte `d22ab54` pasó CI móvil y de base de datos, por lo que C0 quedó aprobado para su alcance técnico local; el Gate Q1 continúa bloqueado por backend remoto, backup/restauración, builds firmados, matriz física Android/iOS, accesibilidad nativa, observabilidad, política legal, soporte y dogfood.
 
 ### Veredicto por nivel
 
 | Nivel | Veredicto | Motivo |
 |---|---|---|
-| Código y contratos locales | Corrección integrada; C0 pendiente | UX-01 y SYNC-01 pasan regresión local; falta confirmar el nuevo CI remoto y QA nativo |
+| Código y contratos locales | C0 aprobado en su alcance | UX-01 y SYNC-01 pasan regresión/revisión; CI móvil, DB y privacidad remota verde; QA nativo pendiente |
 | Base técnica local de pre-alpha | Aprobada | Arranque Android limitado y flujos implementados; faltan pruebas físicas completas |
 | Alpha interna distribuible | Bloqueada | No existe APK/IPA firmado e instalado |
 | Beta externa | Bloqueada | Faltan research, legal, soporte, observabilidad y operación remota |
@@ -517,7 +517,7 @@ con una reejecución de todos los gates el día 13.
 | Secret scan | Sin patrones sensibles confirmados |
 | `npm audit --omit=dev` | 0 críticas, 0 altas, 14 moderadas, 1 baja |
 | Árbol completo de dependencias | 0 críticas, 0 altas, 16 moderadas, 1 baja |
-| Gate técnico interno Fase 9 | APROBADO en su corte; reabierto por P1 posterior de primera revisión |
+| Gate técnico interno Fase 9 | APROBADO en su corte; reabierto por P1 posterior y sustituido por C0 verde el 13 de julio |
 
 ### 13.1.1 Actualización local del 13 de julio
 
@@ -529,7 +529,7 @@ con una reejecución de todos los gates el día 13.
 | Elegibilidad de primera Revisión | PASS en plan nuevo, semana parcial, domingo/lunes y dos zonas |
 | Recuperación de cola ilegible | PASS: aviso mínimo durable, confirmación y fallo conservador |
 | Secret scan actual | PASS local para archivos versionados de texto; no cubre historial, entropía ni binarios |
-| Workflow reforzado | Implementado; ejecución remota pendiente al redactar esta actualización |
+| Workflow reforzado | PASS en [GitHub Actions #29287951627](https://github.com/Proyectohexis/hexis-app/actions/runs/29287951627) |
 
 Los conteos de `npm audit` anteriores representan nodos afectados del árbol. La consulta de advisories únicos encontró cuatro avisos activos: tres moderados (`js-yaml`, `postcss`, `uuid`) y uno bajo (`@babel/core`), principalmente transitivos del toolchain Expo/Metro.
 
