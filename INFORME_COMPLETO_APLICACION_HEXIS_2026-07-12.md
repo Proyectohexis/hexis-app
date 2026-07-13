@@ -20,13 +20,13 @@ El estado real del proyecto es el de una **pre-alpha técnica con un vertical sl
 
 `identidad → protocolo → práctica diaria → evidencia → revisión semanal → ajuste`
 
-La fase técnica interna más reciente fue aprobada con **0 P0 y 0 P1 abiertos en código y contratos locales**. Esto no convierte la aplicación en un producto listo para producción. El Gate Q1 continúa bloqueado por evidencia externa pendiente: backend remoto, backup/restauración, builds firmados, matriz física Android/iOS, accesibilidad nativa, observabilidad, política legal, soporte y dogfood.
+La fase técnica interna fue aprobada inicialmente con **0 P0 y 0 P1 registrados en código y contratos locales**. Una auditoría posterior de Producto/UX detectó un P1 verificable en la primera revisión semanal: la UI permite intentar cerrar una semana anterior al inicio del plan y el servidor la rechaza correctamente. Por tanto, aquel resultado queda como evidencia histórica y el gate local debe reabrirse hasta corregir y probar la elegibilidad. El Gate Q1 también continúa bloqueado por backend remoto, backup/restauración, builds firmados, matriz física Android/iOS, accesibilidad nativa, observabilidad, política legal, soporte y dogfood.
 
 ### Veredicto por nivel
 
 | Nivel | Veredicto | Motivo |
 |---|---|---|
-| Código y contratos locales | Aprobado con observaciones | Suites críticas verdes; no hay P0/P1 locales confirmados |
+| Código y contratos locales | Gate reabierto | Suites verdes, pero existe un P1 de elegibilidad en la primera revisión semanal |
 | Base técnica local de pre-alpha | Aprobada | Arranque Android limitado y flujos implementados; faltan pruebas físicas completas |
 | Alpha interna distribuible | Bloqueada | No existe APK/IPA firmado e instalado |
 | Beta externa | Bloqueada | Faltan research, legal, soporte, observabilidad y operación remota |
@@ -35,7 +35,7 @@ La fase técnica interna más reciente fue aprobada con **0 P0 y 0 P1 abiertos e
 ### Lo que sí puede afirmarse
 
 - Existe una aplicación Expo/React Native que genera bundles Android e iOS.
-- El flujo funcional central está implementado en cliente, dominio y backend local.
+- El loop diario está implementado en cliente, dominio y backend local; el loop semanal sigue parcial.
 - El modelo de datos, RLS, RPC, privacidad y pruebas están versionados.
 - El aislamiento usuario A/B/anónimo tiene evidencia automatizada local.
 - El arranque y render inicial fueron observados en un Android físico mediante Expo Go.
@@ -133,7 +133,7 @@ La percepción “premium”, la superioridad competitiva y la disposición a pa
 
 - Bienvenida.
 - Selección de dirección de identidad.
-- Alta con nombre, email y contraseña.
+- Alta con email y contraseña; la pantalla actual no solicita nombre.
 - Estado de confirmación de email.
 - Login.
 - Solicitud y restablecimiento de contraseña mediante PKCE.
@@ -191,7 +191,9 @@ La navegación principal contiene cinco tabs:
 - Expone recuperación después de una interrupción.
 - Guarda reflexión y decisión: mantener, reducir, aumentar o sustituir.
 - Bloquea el cierre si existe evidencia offline sin conciliar.
-- Navega a Disciplina para materializar manualmente el ajuste.
+- Navega a Disciplina para materializar manualmente el ajuste, pero no identifica el compromiso ni prepara un borrador.
+- No integra todavía la métrica de transformación en la lectura semanal.
+- No muestra un estado de elegibilidad para usuarios cuyo plan aún no solapa una semana cerrada.
 
 ### 4.7 Transformación medible
 
@@ -221,7 +223,7 @@ La navegación principal contiene cinco tabs:
 | HEX-P04 Check-in diario | Implementado | Completo/mínimo, retractación, estados de sync y offline |
 | HEX-P05 Fecha, consistencia y recuperación | Implementado en dominio | Fecha civil, 7/30, recuperación; racha calculada pero no expuesta visualmente |
 | HEX-P06 Transformación medible | Implementado con brecha | Métrica y CRUD; no se sustituye/desactiva la métrica desde UI |
-| HEX-P07 Revisión semanal | Implementado | Semana cerrada, reflexión y decisión; ajuste no queda preseleccionado |
+| HEX-P07 Revisión semanal | Parcial | El servidor valida semana cerrada, pero falta estado de elegibilidad, métrica contextual y ajuste preconfigurado |
 | HEX-P08 Recordatorios | Implementado localmente | One-shots, quiet hours, límites, zona y descansos; matriz nativa pendiente |
 | HEX-P09 Privacidad y cuenta | Implementado localmente | Export/delete y minimización; política, retención y soporte pendientes |
 | HEX-P10 Marca y accesibilidad | Parcial | Contraste y semántica automatizados; assets finales y QA nativo pendientes |
@@ -508,7 +510,7 @@ Esto es positivo para privacidad, pero significa que actualmente no se recopilan
 | Secret scan | Sin patrones sensibles confirmados |
 | `npm audit --omit=dev` | 0 críticas, 0 altas, 14 moderadas, 1 baja |
 | Árbol completo de dependencias | 0 críticas, 0 altas, 16 moderadas, 1 baja |
-| Gate técnico interno Fase 9 | APROBADO: 0 P0 / 0 P1 |
+| Gate técnico interno Fase 9 | APROBADO en su corte; reabierto por P1 posterior de primera revisión |
 
 Los conteos de `npm audit` anteriores representan nodos afectados del árbol. La consulta de advisories únicos encontró cuatro avisos activos: tres moderados (`js-yaml`, `postcss`, `uuid`) y uno bajo (`@babel/core`), principalmente transitivos del toolchain Expo/Metro.
 
@@ -585,6 +587,7 @@ No existe evidencia física de iOS.
 | R-08 | Valor no demostrado | Entrevistas, usabilidad y piloto con métricas reales |
 | R-09 | Gobierno de código/licencia inconsistente | Decidir visibilidad/licencia y sustituir el copyright heredado de Expo |
 | R-10 | CI no cubre todo el gate Q1 | Bloquear altas, ejecutar privacidad adversa, secret scan y conservar artefactos |
+| R-11 | Loop semanal parcial | Corregir elegibilidad, integrar contexto/métrica y preparar un ajuste D+1 accionable |
 
 ### 15.2 Deuda técnica P2
 
@@ -608,6 +611,7 @@ No existe evidencia física de iOS.
 - Identidad/meta ausentes en Revisión.
 - Métrica activa no sustituible/desactivable desde UI.
 - Decisión semanal no prepara automáticamente el cambio.
+- La primera revisión no comunica elegibilidad y puede terminar en un rechazo esperado del servidor.
 - No hay preferencias editables de perfil, zona o unidades.
 - Política y soporte no son accesibles antes de login.
 - Analítica deshabilitada impide medir objetivos.
@@ -616,7 +620,8 @@ No existe evidencia física de iOS.
 
 | Afirmación | Clasificación |
 |---|---|
-| El ciclo identidad→protocolo→evidencia→revisión existe | Verificado |
+| El loop diario identidad→protocolo→evidencia existe | Verificado |
+| Revisión→ajuste→transformación forma un ciclo cerrado | No; implementación parcial |
 | La evidencia diaria soporta full/minimum/offline | Verificado |
 | El aislamiento local A/B/anon pasa pruebas | Verificado localmente |
 | La estética es dark-first y sobria | Verificado por código |
@@ -734,7 +739,7 @@ Nunca deben usarse `service_role`, `sb_secret_`, contraseñas de base o secretos
 
 ## 20. Conclusión
 
-HEXIS dejó de ser un prototipo improvisado: hoy tiene un ciclo funcional coherente, dominio temporal explícito, backend reproducible, controles de aislamiento, offline, privacidad, CI remota verde y una base de pruebas seria. La arquitectura local es defendible y la calidad interna ha mejorado sustancialmente.
+HEXIS dejó de ser un prototipo improvisado: hoy tiene un loop diario coherente, dominio temporal explícito, backend reproducible, controles de aislamiento, offline, privacidad, CI remota verde y una base de pruebas seria. La arquitectura local es defendible y la calidad interna ha mejorado sustancialmente, pero el loop semanal todavía no cierra revisión, ajuste y transformación de forma accionable.
 
 La verdad incómoda es que todavía no es un producto listo para el público. La falta de builds firmados, QA nativo completo, backend remoto recuperable, política legal, observabilidad y evidencia con usuarios impide aprobar producción o beta externa. Además, el repositorio ya es público y el archivo `LICENSE` conserva el copyright del template Expo, por lo que el gobierno de propiedad intelectual debe resolverse de inmediato. Seguir añadiendo funcionalidades antes de cerrar esos gates aumentaría el riesgo y reduciría la velocidad real.
 
@@ -751,6 +756,7 @@ La verdad incómoda es que todavía no es un producto listo para el público. La
 - `docs/strategy/BENCHMARK_HEXIS_2026.md`
 - `docs/architecture/TECHNICAL_ARCHITECTURE.md`
 - `docs/roadmap/DEVELOPMENT_PLAN.md`
+- `docs/roadmap/ANALISIS_DE_BRECHAS_Y_PLAN_MAESTRO_2026-07-12.md`
 - `docs/execution/EXECUTION_STATUS_2026-07-12.md`
 - `docs/release/ALPHA_RELEASE_READINESS_2026-07-12.md`
 - `docs/release/ANDROID_DEVICE_SMOKE_2026-07-12.md`

@@ -2,7 +2,9 @@
 
 **Horizonte de referencia:** 14–16 semanas hasta una decisión de release controlado, sujeto a capacidad, aprendizaje y gates.
 **Regla de avance:** ninguna fecha obliga a saltarse seguridad, datos, accesibilidad o evidencia de usuario.
-**Estado base:** prototipo funcional incompleto; auditoría inicial `BLOCKED / NO-GO`.
+**Estado base original:** prototipo funcional incompleto; auditoría inicial `BLOCKED / NO-GO`.
+
+> Este roadmap conserva la secuencia fundacional. El estado fue rebaselinado después de implementar el vertical slice y detectar brechas nuevas de Producto/UX, operación remota y release. Para ejecutar el trabajo pendiente usa `docs/roadmap/ANALISIS_DE_BRECHAS_Y_PLAN_MAESTRO_2026-07-12.md`.
 
 > **Convención:** “Fase 0/1/2…” indica secuencia temporal. “P0/P1/P2” indica prioridad de requisito y no corresponde al número de fase.
 

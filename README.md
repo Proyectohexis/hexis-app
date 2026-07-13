@@ -51,6 +51,7 @@ El proveedor de analítica/observabilidad, validación física completa y builds
 - `docs/product/PRODUCT_STRATEGY_AND_PRD.md`
 - `docs/architecture/TECHNICAL_ARCHITECTURE.md`
 - `docs/roadmap/DEVELOPMENT_PLAN.md`
+- `docs/roadmap/ANALISIS_DE_BRECHAS_Y_PLAN_MAESTRO_2026-07-12.md`
 - `supabase/README.md`
 - `INFORME_COMPLETO_APLICACION_HEXIS_2026-07-12.md`
 - `INFORME_AUDITORIA_INTEGRAL_2026-07-11.md`

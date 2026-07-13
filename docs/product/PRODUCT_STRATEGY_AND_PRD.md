@@ -499,9 +499,9 @@ Condiciones:
 |---|---|---|
 | P0 Estrategia | Segmento, PRD, no-objetivos y ownership | Documentado; aprobación humana pendiente |
 | P1 Descubrimiento | Entrevistas, prototipo, copy y alcance congelado | Pendiente |
-| T0 Build | Dependencias, bundles y mobile-only reproducible | Cerrado localmente; CI remota pendiente |
-| T1 Confianza | Auth, RLS, fecha civil, almacenamiento seguro y privacidad | Bloqueado por backend/ciclo de cuenta |
-| Q1 Beta | Tests, accesibilidad, dispositivos, CI y cero alto/crítico | Bloqueado |
+| T0 Build | Dependencias, bundles y mobile-only reproducible | Cerrado localmente; CI remota verde |
+| T1 Confianza | Auth, RLS, fecha civil, almacenamiento seguro y privacidad | Local aprobado; remoto, backup/restore y Auth de producción pendientes |
+| Q1 Beta | Tests, accesibilidad, dispositivos, CI y cero alto/crítico | Bloqueado por revisión semanal parcial, builds y QA nativo |
 | V1 Valor | Activación, SEC y retorno después de fallo | Pendiente |
 | M1 Monetización | Retención, pricing, compras y políticas | No autorizado |
 | R1 Público | Signing, assets, rollback y auditoría final | Bloqueado |
