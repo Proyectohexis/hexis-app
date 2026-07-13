@@ -23,7 +23,7 @@ Cerrar el P1 de primera Revisión, eliminar pérdida silenciosa ante cola corrup
 | ENG-01 | Typecheck/lint incremental | Parcial y medido | 20 módulos del núcleo pasan; Deno check/lint pasa con config/lock junto a la función; deuda global: 53 diagnósticos en 10 archivos |
 | SYNC-01 | Cola corrupta no silenciosa | Implementado y cubierto por regresión local | Aviso durable mínimo en Hoy/Cuenta, confirmación explícita y recuperación fail-closed |
 | PRV-01 | Retención de métricas | Diseño documentado; decisión bloqueada | `docs/privacy/METRIC_ENTRY_RETENTION_DECISION_2026-07-13.md`; no se cambió la DB sin Legal/DPO |
-| CI-01 | CI high/critical, privacidad y secretos | Implementado y PASS remoto | [GitHub Actions #29287951627](https://github.com/Proyectohexis/hexis-app/actions/runs/29287951627) |
+| CI-01 | CI high/critical, privacidad, secretos y gates estáticos incrementales | Implementado y PASS remoto | [GitHub Actions #29293297372](https://github.com/Proyectohexis/hexis-app/actions/runs/29293297372) |
 | U0-01 | Protocolo de discovery/usabilidad | Listo para aprobación; 0 participantes y 0 sesiones | `docs/research/PROTOCOLO_RESEARCH_U0_2026-07-13.md` |
 | DB-01 | Consolidación de migración 006 | Diferido hasta inventario remoto | No se debe reescribir una migración potencialmente aplicada sin comparar dev/staging |
 | DATA-01 | Supabase dev/staging | Bloqueado por acceso/owner | Inventario remoto y proyecto autorizado |
@@ -41,7 +41,7 @@ Cerrar el P1 de primera Revisión, eliminar pérdida silenciosa ante cola corrup
 | Contrato editorial parcial y transparencia de borrado lógico | PASS |
 | Secret scan de archivos versionados | PASS local; el alcance no incluye historial Git, entropía ni binarios |
 | Revisión cruzada de UX-01 y SYNC-01 | PASS: 0 P0/P1 identificados en el alcance local |
-| GitHub Actions del commit `d22ab54` | PASS: `mobile-checks` y `database-checks` |
+| GitHub Actions del commit `8a2a8e7` | PASS: `mobile-checks` y `database-checks`, incluidos TypeScript/Deno |
 
 La evidencia histórica de pgTAP, privacidad local, Expo Doctor y exports permanece en
 `docs/execution/EXECUTION_STATUS_2026-07-12.md`. Este corte no la presenta como reejecutada
@@ -62,8 +62,8 @@ debe repetir esos gates.
 - El secret scan cubre archivos de texto versionados en la revisión actual, no historial Git,
   entropía, binarios ni archivos mayores de 2 MiB.
 - Las Actions usan tags mayores y `ubuntu-latest`, no SHAs/imagen inmutables.
-- Docker/Supabase, privacidad E2E, Expo Doctor y bundles quedaron demostrados en el CI remoto
-  del commit `d22ab54`; su validación física nativa sigue pendiente.
+- Docker/Supabase, privacidad E2E, Expo Doctor, TypeScript/Deno y bundles quedaron demostrados en
+  el CI remoto del commit `8a2a8e7`; su validación física nativa sigue pendiente.
 
 ## Reglas de ejecución
 
@@ -88,9 +88,9 @@ debe repetir esos gates.
 - Suites locales completas verdes.
 - Cero P0/P1 local conocido dentro del alcance ejecutado, o excepción explícita.
 
-**Estado actual:** aprobado para el alcance técnico local de este corte. UX-01 y SYNC-01 pasaron
-revisión cruzada, el commit `d22ab54` está publicado y `mobile-checks`/`database-checks` terminaron
-en `success`. Esta aprobación no cierra G0, T1, U0, A0 ni Q1. PRV-01, DB-01 y DATA-01 permanecen
+**Estado actual:** aprobado para el alcance técnico local de este corte. UX-01, SYNC-01 y COPY-01
+pasaron revisión cruzada, el commit `8a2a8e7` está publicado y `mobile-checks`/`database-checks`
+terminaron en `success`. Esta aprobación no cierra G0, T1, U0, A0 ni Q1. PRV-01, DB-01 y DATA-01 permanecen
 como decisiones o dependencias explícitas; no se disfrazan como trabajo cerrado.
 
 ## Handoff del corte

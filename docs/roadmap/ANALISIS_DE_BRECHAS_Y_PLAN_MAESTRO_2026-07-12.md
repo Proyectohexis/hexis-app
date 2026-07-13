@@ -45,8 +45,9 @@ El primer corte R0/R1 ya produjo cambios verificables, sin adelantar gates exter
 
 El estado operativo y la evidencia del corte están en
 `docs/execution/SPRINT_0_EXECUTION_2026-07-13.md`. La revisión cruzada terminó sin P0/P1 en el
-alcance corregido y [GitHub Actions #29287951627](https://github.com/Proyectohexis/hexis-app/actions/runs/29287951627)
-confirmó `mobile-checks` y `database-checks`; C0 está aprobado para este alcance técnico local.
+alcance corregido y [GitHub Actions #29293297372](https://github.com/Proyectohexis/hexis-app/actions/runs/29293297372)
+confirmó `mobile-checks` y `database-checks`, incluidos los nuevos gates TypeScript/Deno; C0 está
+aprobado para este alcance técnico local.
 
 ## 2. Correcciones al diagnóstico anterior
 
@@ -80,7 +81,7 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 | Marca | Incompleta | Sistema dark-first consistente, pero assets de Expo siguen provisionales |
 | Arquitectura | Fuerte localmente | Capas claras, dominio testeable y servidor como fuente de verdad |
 | Seguridad/privacidad | Fuerte localmente | Buenas fronteras; operación real, retención y antiabuso siguen pendientes |
-| QA automatizado | Fuerte para pre-alpha | El corte R1 pasa 164/164 tests locales; el CI remoto del bloque anterior está verde y el nuevo gate TypeScript/Deno espera revalidación; faltan E2E móvil real y QA nativo |
+| QA automatizado | Fuerte para pre-alpha | El corte R1 pasa 164/164 tests locales y CI remoto móvil/DB/privacidad/TypeScript/Deno; faltan E2E móvil real y QA nativo |
 | Release | Inmaduro | Sin IDs nativos, proyecto EAS, builds firmados ni matriz iOS/Android |
 | Operación | No preparada | Sin observabilidad activa, soporte, on-call, SLAs o restore probado |
 | Evidencia de valor | Ausente | Sin entrevistas, usabilidad, dogfood o métricas de cohortes |
