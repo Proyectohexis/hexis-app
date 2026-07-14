@@ -18,7 +18,7 @@ Actualización de ejecución del 13 de julio de 2026:
   para la Edge Function;
 - CI bloquea advisories altos/críticos, ejecuta privacidad E2E, escanea secretos de alta confianza y conserva evidencia compacta; el corte `8a2a8e7` pasó [`mobile-checks` y `database-checks`](https://github.com/Proyectohexis/hexis-app/actions/runs/29293297372), incluidos los nuevos gates TypeScript/Deno, por lo que C0 quedó aprobado para su alcance técnico local;
 - los protocolos de research U0 y de retención de entradas métricas están documentados, pero siguen sin aprobación humana ni datos reales.
-- UX-02 ya cuenta con un prototipo Expo navegable, sintético y separado de la app productiva; pasa 11/11 contratos propios, Expo Doctor 18/18 y exports Android/iOS, pero sigue fuera de piloto hasta el preflight nativo y las aprobaciones Product/UX/Privacy.
+- UX-02 ya cuenta con un prototipo Expo navegable, sintético y separado de la app productiva; el corte `5c7fa48` pasó [CI completa](https://github.com/Proyectohexis/hexis-app/actions/runs/29296558047), incluidos 11/11 contratos propios, Expo Doctor 18/18 y exports Android/iOS, pero sigue fuera de piloto hasta el preflight nativo y las aprobaciones Product/UX/Privacy.
 
 Evidencia local del 12 de julio de 2026:
 
