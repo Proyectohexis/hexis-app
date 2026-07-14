@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "HEXIS UX02 Prototype",
+    "slug": "hexis-ux02-prototype",
+    "version": "0.2.0",
+    "orientation": "default",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#071013",
+    "updates": {
+      "enabled": false
+    },
+    "ios": {
+      "bundleIdentifier": "com.proyectohexis.ux02prototype",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSAllowsArbitraryLoadsForMedia": false,
+          "NSAllowsArbitraryLoadsInWebContent": false,
+          "NSAllowsLocalNetworking": false
+        }
+      },
+      "supportsTablet": false
+    },
+    "android": {
+      "allowBackup": false,
+      "package": "com.proyectohexis.ux02prototype",
+      "blockedPermissions": [
+        "android.permission.INTERNET",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.VIBRATE"
+      ]
+    },
+    "extra": {
+      "prototypeVersion": "UX02-PROT-v0.2",
+      "dataClassification": "synthetic-only",
+      "runtimeIsolation": "production-js-egress-guard-and-android-internet-block",
+      "pilotApproval": "not-approved"
+    }
+  }
+}

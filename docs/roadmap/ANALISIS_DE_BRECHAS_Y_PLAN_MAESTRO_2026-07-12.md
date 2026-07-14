@@ -81,7 +81,7 @@ La siguiente escala es una evaluación técnica, no una métrica científica:
 | Marca | Incompleta | Sistema dark-first consistente, pero assets de Expo siguen provisionales |
 | Arquitectura | Fuerte localmente | Capas claras, dominio testeable y servidor como fuente de verdad |
 | Seguridad/privacidad | Fuerte localmente | Buenas fronteras; operación real, retención y antiabuso siguen pendientes |
-| QA automatizado | Fuerte para pre-alpha | El corte R1 pasa 164/164 tests locales y CI remoto móvil/DB/privacidad/TypeScript/Deno; faltan E2E móvil real y QA nativo |
+| QA automatizado | Fuerte para pre-alpha | El corte vigente pasa 175/175 tests locales; CI cubre móvil/DB/privacidad/TypeScript/Deno y ahora exige exports UX-02 Android/iOS; faltan E2E móvil real y QA nativo |
 | Release | Inmaduro | Sin IDs nativos, proyecto EAS, builds firmados ni matriz iOS/Android |
 | Operación | No preparada | Sin observabilidad activa, soporte, on-call, SLAs o restore probado |
 | Evidencia de valor | Ausente | Sin entrevistas, usabilidad, dogfood o métricas de cohortes |
@@ -506,7 +506,7 @@ Camino crítico: gobierno → integridad local/backend/producto → builds firma
 |---:|---|---|---|---|
 | 1 | Aprobar licencia, visibilidad, IDs y owners | Dirección + Legal | Registro de decisiones firmado | Registro preparado; decisiones del propietario pendientes |
 | 2 | Corregir elegibilidad de Revisión | Product + Mobile | Tests de plan nuevo/semana/zona verdes | Implementado y en re-gate |
-| 3 | Diseñar Revisión accionable | Product + UX | Prototipo y criterios listos para test | Handoff textual UX-02 listo; prototipo navegable y validación U0 pendientes |
+| 3 | Diseñar Revisión accionable | Product + UX | Prototipo y criterios listos para test | Prototipo navegable UX-02 aislado y gates de ingeniería locales verdes; preflight nativo, aprobación y validación U0 pendientes |
 | 4 | Resolver retención de métricas | Privacy + Data | Matriz de retención aprobada | Opciones y recomendación listas; aprobación Legal/DPO pendiente |
 | 5 | Diseñar recuperación de cola corrupta | Offline + UX | Contrato y tests de no pérdida silenciosa | Implementado y re-gate local verde; QA nativo pendiente |
 | 6 | Consolidar migración `006` | Database | Fresh install/upgrade equivalentes | Diferido hasta inventariar remoto para evitar drift |

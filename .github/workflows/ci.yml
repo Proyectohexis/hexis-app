@@ -76,11 +76,23 @@ jobs:
       - name: Expo Doctor
         run: npm run doctor
 
+      - name: UX02 prototype doctor
+        run: npm run prototype:ux02:doctor
+
+      - name: UX02 resolved native configuration
+        run: npm run prototype:ux02:verify-native-config
+
       - name: Android production bundle
         run: npm run export:android
 
       - name: iOS production bundle
         run: npm run export:ios
+
+      - name: UX02 Android isolated prototype bundle
+        run: npm run prototype:ux02:export:android
+
+      - name: UX02 iOS isolated prototype bundle
+        run: npm run prototype:ux02:export:ios
 
       - name: Record compact mobile evidence
         shell: bash
@@ -89,8 +101,8 @@ jobs:
             echo "commit=${GITHUB_SHA}"
             echo "node=$(node --version)"
             echo "npm=$(npm --version)"
-            du -sh dist/android dist/ios
-            find dist/android dist/ios -type f -printf '%s %p\n' | sort -nr | sed -n '1,20p'
+            du -sh dist/android dist/ios dist/prototypes/ux02/android dist/prototypes/ux02/ios
+            find dist/android dist/ios dist/prototypes/ux02 -type f -printf '%s %p\n' | sort -nr | sed -n '1,30p'
           } > ci-evidence/mobile-build-summary.txt
 
       - name: Upload compact mobile CI evidence

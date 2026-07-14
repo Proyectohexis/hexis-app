@@ -5,13 +5,13 @@
 - **Identificador del prototipo:** `UX02-PROT-v0.2`
 - **Fecha:** 2026-07-13
 - **Plataforma objetivo:** React Native, teléfonos iOS y Android
-- **Rol responsable:** App Product Designer
-- **Estado del entregable:** listo para revisión cruzada y construcción interna del prototipo U0; no aprobado para piloto contabilizable ni integración productiva
+- **Roles responsables:** App Product Designer + App Interaction Designer + React Native Developer
+- **Estado del entregable:** prototipo navegable interno implementado y gates de ingeniería locales verdes; no aprobado para piloto contabilizable ni integración productiva
 - **Evidencia con usuarios:** ninguna; 0 entrevistas y 0 pruebas de usabilidad realizadas
 
 ## 1. Decisión de este corte
 
-Este documento define un prototipo textual de baja fidelidad y un contrato de handoff verificable para UX-02. Permite construir y probar la Tarea T4 del protocolo U0 en un harness aislado, sin alterar la aplicación productiva ni su modelo de datos.
+Este documento define el contrato de baja fidelidad y su implementación navegable verificable para UX-02. El harness aislado está en `prototypes/ux02` y permite preparar la Tarea T4 del protocolo U0 sin alterar la aplicación productiva ni su modelo de datos.
 
 No autoriza:
 
@@ -373,6 +373,8 @@ Validación del editor:
 - la acción mínima nueva no puede quedar vacía ni superar los límites aprobados;
 - cambiar días y acción mínima a la vez requiere una decisión explícita “Ambos”; no ocurre por accidente;
 - los controles muestran nombres completos, no solo iniciales, con texto al 200%.
+
+En el artefacto navegable U0, las posibles reflexiones, acciones mínimas reducidas y sustituciones se materializan como opciones sintéticas congeladas, no como texto libre. Esta adaptación de aislamiento conserva la posibilidad de omitir la reflexión y de comparar las ramas, pero no pretende validar redacción autónoma; cualquier futura entrada libre exige un protocolo y tratamiento de datos distinto.
 
 ### 9.4 Variantes del paso 3
 
@@ -781,11 +783,22 @@ No forman parte de este cambio documental. Si U0 valida el concepto, U1 necesita
 
 ## 19. Gate y handoff
 
-- **Rol activado:** App Product Designer.
-- **Entregable:** prototipo textual y contrato UX-02 versionados.
-- **Evidencia usada:** PRD, plan maestro, pantalla actual y protocolo U0 locales.
+- **Roles activados:** App Product Designer, App Interaction Designer, React Native Developer, QA de lógica y aislamiento.
+- **Entregable:** contrato UX-02 y prototipo Expo navegable `UX02-PROT-v0.2`, separados de la app productiva.
+- **Evidencia usada:** PRD, plan maestro, pantalla actual, protocolo U0, fixtures A/B inmutables, 11/11 contratos UX-02, 175/175 pruebas completas, config nativa resuelta sin permisos Android activos, Expo Doctor 18/18 y exports Hermes Android/iOS.
 - **Evidencia no disponible:** conducta, comprensión, tiempo o preferencia de usuarios.
-- **Estado UX-02 de diseño:** listo para revisión cruzada y construcción interna del prototipo navegable; pendiente de aprobación Product/UX/Privacy y preflight antes de cualquier piloto contabilizable.
+- **Estado UX-02 de diseño:** prototipo navegable implementado; pendiente de aprobación Product/UX/Privacy y preflight nativo antes de cualquier piloto contabilizable.
 - **Estado UX-02 productivo:** bloqueado hasta completar U0 y resolver UX02-D01 a D08 según owner.
 - **Gate U0:** no iniciado; este documento no cambia 0/12–15 entrevistas ni 0/5–8 pruebas.
-- **Siguiente rol:** App Interaction Designer para prototipo navegable; UX Researcher para piloto; Product/Privacy para preflight; App API + Data solo después de decisión U0.
+- **Siguiente rol:** Product/Privacy y Mobile Accessibility QA para el preflight; UX Researcher para el piloto solo si se aprueba; App API + Data solo después de la decisión U0.
+
+### 19.1 Evidencia y límites del artefacto navegable
+
+- El código vive bajo `prototypes/ux02`, con `app.json`, paquete, fixtures, modelo y entrada propios.
+- La suite rechaza imports productivos, días duplicados o desconocidos, target ajeno, recibos sin confirmación, conflictos sin cambio de versión y cualquier pérdida de la acción mínima de sustitución. El envelope completo de sesión se coteja con fixtures canónicos; fuente, fecha, reflexión o conflicto adulterados fallan antes de renderizar.
+- `Reducir` cubre menos días, acción mínima más pequeña o ambos; `Aumentar` conserva su alcance versionado de añadir días.
+- El conflicto recarga una fuente sintética v2 realmente distinta; rollover mueve de forma coherente el corte histórico al martes 14 y la vigencia al miércoles 15.
+- El bundle de producción instala antes de Expo un preflight inmutable que hace fallar `fetch`, `XMLHttpRequest` y `WebSocket`; Android bloquea además `INTERNET`, lectura y escritura de almacenamiento externo en el manifest del artefacto independiente.
+- Expo Go se muestra honestamente como preview con red del contenedor disponible y nunca cuenta como sesión U0.
+- No existen campos de texto libre: reflexión, reducción de acción mínima y sustitución usan opciones sintéticas inmutables, y el estado se reinicia entre recorridos. El piloto sigue bloqueado hasta probar un binario instalado, iOS/Android, VoiceOver/TalkBack y texto al 200%.
+- Los exports JavaScript Android/iOS pasan; no equivalen a APK/IPA firmados ni aportan evidencia con usuarios.

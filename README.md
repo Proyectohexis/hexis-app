@@ -13,11 +13,12 @@ Actualización de ejecución del 13 de julio de 2026:
 - la versión de la pre-alpha quedó alineada en `0.1.0`;
 - la primera Revisión ya calcula la última semana ISO cerrada en la zona del plan, comunica la primera fecha elegible y no consulta ni envía semanas fuera de vigencia;
 - una cola offline ilegible ya no se restablece silenciosamente: primero persiste un aviso diagnóstico mínimo, falla de forma conservadora si no puede guardarlo y lo muestra en Hoy y Cuenta hasta confirmación;
-- el gate móvil local pasa typecheck incremental de 20 módulos, sintaxis en 97 archivos,
-  dependencias declaradas y 164/164 pruebas unitarias/de contrato; Deno check/lint también pasa
+- el gate móvil local pasa typecheck incremental de 20 módulos, sintaxis en 105 archivos,
+  dependencias declaradas y 175/175 pruebas unitarias/de contrato; Deno check/lint también pasa
   para la Edge Function;
 - CI bloquea advisories altos/críticos, ejecuta privacidad E2E, escanea secretos de alta confianza y conserva evidencia compacta; el corte `8a2a8e7` pasó [`mobile-checks` y `database-checks`](https://github.com/Proyectohexis/hexis-app/actions/runs/29293297372), incluidos los nuevos gates TypeScript/Deno, por lo que C0 quedó aprobado para su alcance técnico local;
 - los protocolos de research U0 y de retención de entradas métricas están documentados, pero siguen sin aprobación humana ni datos reales.
+- UX-02 ya cuenta con un prototipo Expo navegable, sintético y separado de la app productiva; pasa 11/11 contratos propios, Expo Doctor 18/18 y exports Android/iOS, pero sigue fuera de piloto hasta el preflight nativo y las aprobaciones Product/UX/Privacy.
 
 Evidencia local del 12 de julio de 2026:
 
@@ -112,6 +113,21 @@ Inicia Metro:
 npm start
 ```
 
+## Prototipo navegable UX-02
+
+El artefacto `UX02-PROT-v0.2` vive en `prototypes/ux02` como workspace Expo separado. No importa autenticación, repositorios, almacenamiento ni analítica de la app productiva, solo contiene fixtures ficticios y no expone campos de texto libre.
+
+```bash
+npm run prototype:ux02:start
+npm run prototype:ux02:doctor
+npm run prototype:ux02:verify-native-config
+npm run prototype:ux02:export:android
+npm run prototype:ux02:export:ios
+npm run check:ux02
+```
+
+`prototype:ux02:start` es un preview de desarrollo: Expo Go conserva red para cargar el bundle y la propia pantalla lo marca como no elegible para U0. Los bundles de producción instalan antes de Expo un preflight inmutable que bloquea `fetch`, `XMLHttpRequest` y `WebSocket`; Android elimina del manifest independiente Internet, almacenamiento externo, overlay y vibración. Los exports prueban el bundle JavaScript, no sustituyen APK/IPA, lector de pantalla, texto al 200% ni el preflight en un binario instalado.
+
 En un Android físico conectado a la misma Wi‑Fi, usa la IP privada del equipo en `.env` —por ejemplo `http://192.168.0.6:55321`— y abre la URL `exp://IP_DEL_EQUIPO:8081` en [Expo Go para SDK 54](https://expo.dev/go?device=true&platform=android&sdkVersion=54). No uses `127.0.0.1` desde el teléfono.
 
 ## Calidad móvil
@@ -124,6 +140,7 @@ npm test
 npm run doctor
 npm run export:android
 npm run export:ios
+npm run check:ux02
 npm run check:mobile
 npm run test:privacy:e2e
 npm run typecheck:edge

@@ -350,6 +350,8 @@ El prototipo debe tener:
 - reset determinista entre sesiones;
 - camino de recuperación si falla el prototipo.
 
+El artefacto navegable de ingeniería está en `prototypes/ux02` y permanece marcado `not-approved`. No acepta texto libre: todas las respuestas que pueden elegirse están congeladas como fixtures ficticios. Su preview de Expo Go conserva red para cargar Metro y no puede usarse como sesión U0. Solo un bundle de producción con el preflight de egreso activo puede avanzar al preflight nativo; antes de reclutar todavía deben comprobarse el binario instalado, la denegación efectiva en cada plataforma, cero telemetría, reset, VoiceOver/TalkBack y texto al 200%, con aprobación Product/UX/Privacy.
+
 Escenario A `UX02-SC-A-APRENDER-v1`, siempre ficticio:
 
 - identidad: “Soy una persona que protege tiempo para aprender”;
